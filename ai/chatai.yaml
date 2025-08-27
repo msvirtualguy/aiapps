@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nai-chatapp
+  namespace: aichat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nai-chatapp
+  template:
+    metadata:
+      labels:
+        app: nai-chatapp
+    spec:
+      containers:
+      - name: nai-chatapp
+        image: johnugeorge/nai-chatapp:0.12
+        ports:
+        - containerPort: 8502
+        volumeMounts:
+        - mountPath: "/mnt/data/chat"
+          name: chat-storage
+      volumes:
+      - name: chat-storage
+        persistentVolumeClaim:
+          claimName: chat-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chat-pvc
+  namespace: aichat
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: nutanix-volume
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nai-chatapp
+  namespace: aichat
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8502
+  selector:
+    app: nai-chatapp
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nai-chatapp
+  namespace: aichat
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "false"
+spec:
+  tls:
+  - hosts:
+    - chat.utech.local
+  rules:
+  - host: chat.utech.local
+    http:
+      paths:
+      - path: "/"
+        pathType: Prefix
+        backend:
+          service:
+            name: nai-chatapp
+            port:
+              number: 8080
