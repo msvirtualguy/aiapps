@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { WebcamCapture } from '@/components/camera/WebcamCapture'
 import { usePersona } from '@/context/PersonaContext'
 import type { UserPersona } from '@/lib/types'
-import { Zap, ShoppingBag, Bot, Shield, Camera, Users } from 'lucide-react'
+import { Zap, ShoppingBag, Bot, Shield, Camera, Users, ScanFace } from 'lucide-react'
 import { clsx } from 'clsx'
+import Image from 'next/image'
 
 const FEATURES = [
   { icon: Bot, label: 'AI Shopping Agent', desc: 'Natural language product search' },
@@ -16,13 +17,13 @@ const FEATURES = [
 ]
 
 const DEMO_PERSONAS: Array<{
-  emoji: string
+  imageUrl: string
   label: string
   sublabel: string
   persona: UserPersona
 }> = [
   {
-    emoji: '🎮',
+    imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=face&auto=format',
     label: 'Gen Z',
     sublabel: 'Teen · 16–20',
     persona: {
@@ -39,7 +40,7 @@ const DEMO_PERSONAS: Array<{
     },
   },
   {
-    emoji: '✨',
+    imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face&auto=format',
     label: 'Young Adult',
     sublabel: 'Millennial · 25–35',
     persona: {
@@ -56,7 +57,7 @@ const DEMO_PERSONAS: Array<{
     },
   },
   {
-    emoji: '🏃',
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&h=200&fit=crop&crop=face&auto=format',
     label: 'Athlete',
     sublabel: 'Active · 20–40',
     persona: {
@@ -73,7 +74,7 @@ const DEMO_PERSONAS: Array<{
     },
   },
   {
-    emoji: '💼',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face&auto=format',
     label: 'Professional',
     sublabel: 'Gen X · 40–55',
     persona: {
@@ -96,7 +97,7 @@ export default function WelcomePage() {
   const { setPersona } = usePersona()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [tab, setTab] = useState<'scan' | 'demo'>('demo')
-  const [selectedDemo, setSelectedDemo] = useState<number | null>(null)
+  const [scanningIdx, setScanningIdx] = useState<number | null>(null)
 
   const handleCapture = async (base64: string) => {
     setIsAnalyzing(true)
@@ -116,9 +117,12 @@ export default function WelcomePage() {
   }
 
   const handleDemoSelect = (idx: number) => {
-    setSelectedDemo(idx)
-    setPersona(DEMO_PERSONAS[idx].persona)
-    setTimeout(() => router.push('/shop'), 300)
+    if (scanningIdx !== null) return
+    setScanningIdx(idx)
+    setTimeout(() => {
+      setPersona(DEMO_PERSONAS[idx].persona)
+      router.push('/shop')
+    }, 1800)
   }
 
   return (
@@ -208,28 +212,72 @@ export default function WelcomePage() {
                     Pick a shopper profile to see AI personalization in action
                   </p>
                   <div className="grid grid-cols-2 gap-3">
-                    {DEMO_PERSONAS.map((p, idx) => (
-                      <motion.button
-                        key={p.label}
-                        onClick={() => handleDemoSelect(idx)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={clsx(
-                          'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center',
-                          selectedDemo === idx
-                            ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
-                            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50'
-                        )}>
-                        <span className="text-3xl">{p.emoji}</span>
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">{p.label}</p>
-                          <p className="text-xs text-slate-400">{p.sublabel}</p>
-                        </div>
-                        {selectedDemo === idx && (
-                          <span className="text-xs font-semibold text-indigo-600">Loading...</span>
-                        )}
-                      </motion.button>
-                    ))}
+                    {DEMO_PERSONAS.map((p, idx) => {
+                      const isScanning = scanningIdx === idx
+                      const isDisabled = scanningIdx !== null && !isScanning
+                      return (
+                        <motion.button
+                          key={p.label}
+                          onClick={() => handleDemoSelect(idx)}
+                          whileHover={isDisabled ? {} : { scale: 1.02 }}
+                          whileTap={isDisabled ? {} : { scale: 0.97 }}
+                          className={clsx(
+                            'flex flex-col items-center gap-2.5 p-3 rounded-2xl border-2 transition-all text-center overflow-hidden',
+                            isScanning
+                              ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100'
+                              : isDisabled
+                              ? 'border-slate-100 bg-slate-50 opacity-40'
+                              : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                          )}>
+                          {/* Headshot with scan overlay */}
+                          <div className="relative w-16 h-16 rounded-xl overflow-hidden">
+                            <Image
+                              src={p.imageUrl}
+                              alt={p.label}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                            />
+                            {/* Corner brackets */}
+                            {!isScanning && (
+                              <div className="absolute inset-0 pointer-events-none">
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-indigo-400 rounded-br" />
+                              </div>
+                            )}
+                            {/* Scan animation */}
+                            {isScanning && (
+                              <div className="absolute inset-0 bg-indigo-900/20">
+                                <motion.div
+                                  className="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_8px_2px_rgba(99,102,241,0.8)]"
+                                  initial={{ top: '0%' }}
+                                  animate={{ top: ['0%', '100%', '0%'] }}
+                                  transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                                />
+                                <div className="absolute inset-0 pointer-events-none">
+                                  <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
+                                  <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
+                                  <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
+                                  <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-indigo-400 rounded-br" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{p.label}</p>
+                            <p className="text-xs text-slate-400">{p.sublabel}</p>
+                          </div>
+                          {isScanning && (
+                            <div className="flex items-center gap-1 text-xs font-semibold text-indigo-600">
+                              <ScanFace className="w-3.5 h-3.5" />
+                              Scanning...
+                            </div>
+                          )}
+                        </motion.button>
+                      )
+                    })}
                   </div>
                   <button onClick={() => router.push('/shop')}
                     className="w-full text-sm text-slate-400 hover:text-slate-600 transition-colors text-center pt-1">
