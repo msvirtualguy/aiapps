@@ -1,19 +1,19 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk, Space_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/context/CartContext'
 import { PersonaProvider } from '@/context/PersonaContext'
 
-const spaceGrotesk = Space_Grotesk({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-space-grotesk',
+  variable: '--font-plus-jakarta',
   display: 'swap',
 })
 
-const spaceMono = Space_Mono({
+const dmMono = DM_Mono({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-space-mono',
+  weight: ['400', '500'],
+  variable: '--font-dm-mono',
   display: 'swap',
 })
 
@@ -28,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${spaceGrotesk.variable} ${spaceMono.variable} font-sans antialiased`}>
+    <html lang="en">
+      <body className={`${plusJakarta.variable} ${dmMono.variable} font-sans antialiased`}>
         <PersonaProvider>
           <CartProvider>
             {children}

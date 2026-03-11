@@ -2,15 +2,12 @@ import { cookies } from 'next/headers'
 import { naiClient, MODELS } from '@/lib/nai-client'
 import { agentTools } from '@/lib/agent-tools'
 import { semanticSearch } from '@/lib/embeddings-cache'
+import { getCart, setCart } from '@/lib/cart-store'
 import products from '@/data/products.json'
 import type { Product, CartItem, UserPersona } from '@/lib/types'
 import type OpenAI from 'openai'
 
 const productMap = new Map((products as Product[]).map(p => [p.id, p]))
-
-// Shared cart store (same instance as cart route)
-// For a demo, module-level Map is fine — single server process
-const cartStore = new Map<string, CartItem[]>()
 
 function getSessionId(): string {
   const cookieStore = cookies()
@@ -62,7 +59,7 @@ async function dispatchTool(
       summary = `Retrieved details for ${(result as Product)?.name ?? args.product_id}`
 
     } else if (name === 'add_to_cart') {
-      const cart = cartStore.get(sessionId) ?? []
+      const cart = getCart(sessionId)
       const product = productMap.get(args.product_id)
       if (!product) {
         result = { error: 'Product not found' }
@@ -75,7 +72,7 @@ async function dispatchTool(
         } else {
           cart.push({ product, quantity: qty })
         }
-        cartStore.set(sessionId, cart)
+        setCart(sessionId, cart)
         result = { success: true, product: product.name, quantity: qty, cart }
         summary = `Added ${product.name} to cart`
       }
@@ -95,7 +92,7 @@ async function dispatchTool(
       summary = `Found ${(result as unknown[]).length} active promotions`
 
     } else if (name === 'get_cart') {
-      result = cartStore.get(sessionId) ?? []
+      result = getCart(sessionId)
       const cart = result as CartItem[]
       summary = cart.length > 0
         ? `Cart has ${cart.length} items`
@@ -143,7 +140,7 @@ export async function POST(request: Request) {
   }
 
   const sessionId = getSessionId()
-  const cart = cartStore.get(sessionId) ?? []
+  const cart = getCart(sessionId)
 
   const encoder = new TextEncoder()
 

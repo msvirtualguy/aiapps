@@ -17,6 +17,7 @@ data:
   NAI_EMBEDDINGS_MODEL: "ll-nemo-embed-1b-v2"
   NODE_ENV: "production"
   NEXT_TELEMETRY_DISABLED: "1"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
 ---
 apiVersion: v1
 kind: Secret
@@ -46,7 +47,7 @@ spec:
     spec:
       containers:
         - name: retail-agent
-          image: msvirtualguy/retail-agent-demo:v1
+          image: msvirtualguyd/retail-agent-demo:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

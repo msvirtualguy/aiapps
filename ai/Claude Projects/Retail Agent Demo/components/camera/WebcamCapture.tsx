@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useWebcam } from '@/hooks/useWebcam'
 import { NeonButton } from '@/components/ui/NeonButton'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { Camera, CameraOff } from 'lucide-react'
+import { Camera, CameraOff, ScanFace } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface WebcamCaptureProps {
@@ -22,46 +22,39 @@ export function WebcamCapture({ onCapture, isAnalyzing }: WebcamCaptureProps) {
 
   const handleCapture = () => {
     const photo = capturePhoto()
-    if (photo) {
-      onCapture(photo)
-    } else {
-      // Demo fallback: send empty string to get default persona
-      onCapture('')
-    }
+    onCapture(photo ?? '')
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-5">
       {/* Camera viewport */}
       <div className={clsx(
-        'relative w-72 h-72 rounded-2xl overflow-hidden',
-        'border-2',
-        isReady ? 'border-neon-green/50 shadow-[0_0_30px_rgba(57,255,20,0.2)]' : 'border-white/20'
+        'relative w-72 h-72 rounded-3xl overflow-hidden bg-slate-100',
+        'border-2 transition-colors',
+        isReady ? 'border-indigo-300' : 'border-slate-200'
       )}>
-        {/* Scanning overlay */}
+        {/* Corner guides */}
         {isReady && !isAnalyzing && (
           <div className="absolute inset-0 z-10 pointer-events-none">
-            {/* Corner brackets */}
-            <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-neon-green" />
-            <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-neon-green" />
-            <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-neon-green" />
-            <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-neon-green" />
+            <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-indigo-500 rounded-tl-lg" />
+            <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-indigo-500 rounded-tr-lg" />
+            <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-indigo-500 rounded-bl-lg" />
+            <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-indigo-500 rounded-br-lg" />
           </div>
         )}
 
         {/* Analyzing overlay */}
         {isAnalyzing && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
             <LoadingSpinner size="lg" color="green" />
-            <p className="mt-4 text-neon-green font-mono text-sm animate-pulse">SCANNING...</p>
+            <p className="mt-4 text-indigo-600 font-semibold text-sm">Analyzing your style...</p>
           </div>
         )}
 
-        {/* Video feed or placeholder */}
         {error ? (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-white/5 text-white/40">
+          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
             <CameraOff className="w-12 h-12 mb-3" />
-            <p className="text-xs font-mono text-center px-4">{error}</p>
+            <p className="text-xs text-center px-4">{error}</p>
           </div>
         ) : (
           <video
@@ -73,35 +66,34 @@ export function WebcamCapture({ onCapture, isAnalyzing }: WebcamCaptureProps) {
           />
         )}
 
-        {/* Loading state */}
         {!isReady && !error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
             <LoadingSpinner color="green" />
           </div>
         )}
       </div>
 
-      {/* Camera icon badge */}
-      <div className="flex items-center gap-2 text-white/40 text-xs font-mono">
+      <div className="flex items-center gap-2 text-slate-400 text-xs">
         <Camera className="w-3.5 h-3.5" />
         {isReady ? (
-          <span className="text-neon-green/80">Camera ready</span>
+          <span className="text-indigo-600 font-medium">Camera ready</span>
         ) : error ? (
-          <span>Demo mode active</span>
+          <span>Demo mode — no camera needed</span>
         ) : (
-          <span>Connecting camera...</span>
+          <span>Connecting...</span>
         )}
       </div>
 
-      {/* CTA Button */}
       <NeonButton
         variant="green"
         size="lg"
         onClick={handleCapture}
         disabled={isAnalyzing}
         loading={isAnalyzing}
+        className="w-full flex items-center justify-center gap-2"
       >
-        {isAnalyzing ? 'ANALYZING...' : 'START SHOPPING →'}
+        <ScanFace className="w-5 h-5" />
+        {isAnalyzing ? 'Analyzing...' : 'Start Shopping'}
       </NeonButton>
     </div>
   )

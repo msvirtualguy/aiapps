@@ -9,7 +9,7 @@ import { PersonaCard } from '@/components/camera/PersonaCard'
 import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
-import { Zap, ShoppingBag, User } from 'lucide-react'
+import { Zap, ShoppingBag, User, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 
@@ -21,46 +21,43 @@ export default function ShopPage() {
   const [showCart, setShowCart] = useState(false)
 
   const handleCartUpdate = (items: CartItem[]) => {
-    // Sync cart from server-side agent operations
-    // The CartContext also updates via ProductCard buttons
     if (items.length > 0) setShowCart(true)
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Top nav */}
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Nav */}
       <motion.header
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between px-6 py-3 border-b border-white/8 glass sticky top-0 z-50 rounded-none"
+        className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm"
       >
-        <button
-          onClick={() => router.push('/')}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <Zap className="w-5 h-5 text-neon-green" />
-          <span className="font-mono font-bold text-neon-green tracking-widest text-sm">FUTURESTORE</span>
-        </button>
-
-        <div className="flex items-center gap-3">
-          {persona && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-green/10 border border-neon-green/20">
-              <User className="w-3 h-3 text-neon-green" />
-              <span className="text-xs font-mono text-neon-green capitalize">{persona.vibe}</span>
+        <div className="flex items-center justify-between px-5 py-3">
+          <button onClick={() => router.push('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <Zap className="w-3.5 h-3.5 text-white" />
             </div>
-          )}
-          <button
-            onClick={() => setShowCart(!showCart)}
-            className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-neon-blue/30 transition-colors"
-          >
-            <ShoppingBag className="w-4 h-4 text-neon-blue" />
-            <span className="text-xs font-mono text-white/70">Cart</span>
-            {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-neon-pink text-black text-[9px] font-bold font-mono flex items-center justify-center">
-                {totalItems}
-              </span>
-            )}
+            <span className="font-bold text-slate-900 text-sm">FutureStore</span>
           </button>
+
+          <div className="flex items-center gap-2">
+            {persona && (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100">
+                <User className="w-3 h-3 text-indigo-500" />
+                <span className="text-xs font-semibold text-indigo-700 capitalize">{persona.vibe}</span>
+              </div>
+            )}
+            <button onClick={() => setShowCart(!showCart)}
+              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+              <ShoppingBag className="w-4 h-4 text-slate-600" />
+              <span className="text-xs font-semibold text-slate-700">Cart</span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </motion.header>
 
@@ -68,18 +65,14 @@ export default function ShopPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat + Persona */}
         <motion.aside
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: -16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="w-80 shrink-0 flex flex-col gap-3 p-4 border-r border-white/8 overflow-y-auto"
+          className="w-80 shrink-0 flex flex-col gap-3 p-4 border-r border-slate-200 overflow-y-auto bg-white"
         >
           {persona && <PersonaCard persona={persona} />}
           <div className="flex-1 min-h-0" style={{ minHeight: '400px' }}>
-            <ChatPanel
-              persona={persona}
-              onProductsFound={setProducts}
-              onCartUpdate={handleCartUpdate}
-            />
+            <ChatPanel persona={persona} onProductsFound={setProducts} onCartUpdate={handleCartUpdate} />
           </div>
         </motion.aside>
 
@@ -88,25 +81,27 @@ export default function ShopPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="flex-1 overflow-y-auto p-4"
+          className="flex-1 overflow-y-auto p-5"
         >
-          <div className="mb-4">
-            <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest">
-              {products.length > 0 ? `${products.length} Products Found` : 'Browse Our Store'}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
+              {products.length > 0 ? `${products.length} Results` : 'Discover Products'}
             </h2>
+            {products.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+                AI-powered search <ChevronRight className="w-3 h-3" />
+              </span>
+            )}
           </div>
           <ProductGrid products={products} />
         </motion.main>
 
-        {/* Right: Cart (collapsible on mobile, always visible on lg) */}
+        {/* Right: Cart (desktop) */}
         <motion.aside
-          initial={{ opacity: 0, x: 20 }}
+          initial={{ opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className={clsx(
-            'w-72 shrink-0 border-l border-white/8 overflow-hidden',
-            'hidden lg:flex lg:flex-col'
-          )}
+          className="w-72 shrink-0 border-l border-slate-200 hidden lg:flex lg:flex-col bg-white"
         >
           <div className="flex-1 p-3 min-h-0 flex flex-col">
             <CartSidebar />
@@ -119,15 +114,13 @@ export default function ShopPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="lg:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end"
+          className="lg:hidden fixed inset-0 z-50 bg-black/40 flex justify-end"
           onClick={() => setShowCart(false)}
         >
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            className="w-80 h-full flex flex-col p-3"
+            className="w-80 h-full bg-white p-3"
             onClick={e => e.stopPropagation()}
           >
             <CartSidebar />

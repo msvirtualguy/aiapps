@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import products from '@/data/products.json'
-import type { CartItem, Product } from '@/lib/types'
+import type { Product } from '@/lib/types'
+import { getCart, setCart } from '@/lib/cart-store'
 
-// In-memory cart store — sufficient for single-session demo
-const cartStore = new Map<string, CartItem[]>()
 const productMap = new Map((products as Product[]).map(p => [p.id, p]))
 
 function getSessionId(): string {
@@ -13,16 +12,9 @@ function getSessionId(): string {
   return existing ?? `sess_${Math.random().toString(36).slice(2)}`
 }
 
-function ensureCart(sessionId: string): CartItem[] {
-  if (!cartStore.has(sessionId)) {
-    cartStore.set(sessionId, [])
-  }
-  return cartStore.get(sessionId)!
-}
-
 export async function GET() {
   const sessionId = getSessionId()
-  const cart = ensureCart(sessionId)
+  const cart = getCart(sessionId)
   const response = NextResponse.json(cart)
   response.cookies.set('session_id', sessionId, { httpOnly: true, sameSite: 'lax', maxAge: 86400 })
   return response
@@ -30,7 +22,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const sessionId = getSessionId()
-  const cart = ensureCart(sessionId)
+  const cart = getCart(sessionId)
   const { action, product_id, quantity = 1 } = await request.json()
 
   if (action === 'add') {
@@ -60,7 +52,7 @@ export async function POST(request: Request) {
     cart.splice(0, cart.length)
   }
 
-  cartStore.set(sessionId, cart)
+  setCart(sessionId, cart)
   const response = NextResponse.json(cart)
   response.cookies.set('session_id', sessionId, { httpOnly: true, sameSite: 'lax', maxAge: 86400 })
   return response
