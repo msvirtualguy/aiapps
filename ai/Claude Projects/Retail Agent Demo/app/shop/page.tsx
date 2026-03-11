@@ -1,16 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ChatPanel } from '@/components/chat/ChatPanel'
 import { ProductGrid } from '@/components/products/ProductGrid'
 import { CartSidebar } from '@/components/cart/CartSidebar'
 import { PersonaCard } from '@/components/camera/PersonaCard'
+import { GroceryListScanner } from '@/components/scanner/GroceryListScanner'
 import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
 import allProducts from '@/data/products.json'
-import { ShoppingCart, ShoppingBag, User, ChevronRight } from 'lucide-react'
+import { ShoppingCart, ShoppingBag, User, ChevronRight, ScanLine } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function ShopPage() {
@@ -19,6 +20,7 @@ export default function ShopPage() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>(allProducts as Product[])
   const [showCart, setShowCart] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
 
   const handleCartUpdate = (items: CartItem[]) => {
     if (items.length > 0) setShowCart(true)
@@ -47,6 +49,11 @@ export default function ShopPage() {
                 <span className="text-xs font-semibold text-indigo-700 capitalize">{persona.vibe}</span>
               </div>
             )}
+            <button onClick={() => setShowScanner(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-100 transition-all">
+              <ScanLine className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-emerald-700">Scan List</span>
+            </button>
             <button onClick={() => setShowCart(!showCart)}
               className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
               <ShoppingBag className="w-4 h-4 text-slate-600" />
@@ -108,6 +115,11 @@ export default function ShopPage() {
           </div>
         </motion.aside>
       </div>
+
+      {/* Grocery list scanner modal */}
+      <AnimatePresence>
+        {showScanner && <GroceryListScanner onClose={() => setShowScanner(false)} />}
+      </AnimatePresence>
 
       {/* Mobile cart overlay */}
       {showCart && (
