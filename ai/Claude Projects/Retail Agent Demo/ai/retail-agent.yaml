@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: retail-agent
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: retail-agent-config
+  namespace: retail-agent
+data:
+  # Verify model names with: curl -H "Authorization: Bearer $NAI_API_KEY" $NAI_BASE_URL/models
+  NAI_BASE_URL: "https://192.168.110.51/enterpriseai/v1"
+  NAI_LLM_MODEL: "qwen25-vl7b-in-nvfp4"
+  NAI_VISION_MODEL: "qwen25-vl7b-in-nvfp4"
+  NAI_EMBEDDINGS_MODEL: "ll-nemo-embed-1b-v2"
+  NODE_ENV: "production"
+  NEXT_TELEMETRY_DISABLED: "1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: retail-agent-secret
+  namespace: retail-agent
+type: Opaque
+stringData:
+  NAI_API_KEY: "2a150f6f-df0d-4e27-a8aa-f9981766b3f3"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retail-agent
+  namespace: retail-agent
+  labels:
+    app: retail-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retail-agent
+  template:
+    metadata:
+      labels:
+        app: retail-agent
+    spec:
+      containers:
+        - name: retail-agent
+          image: msvirtualguy/retail-agent-demo:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: retail-agent-config
+          env:
+            - name: NAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: retail-agent-secret
+                  key: NAI_API_KEY
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: retail-agent
+  namespace: retail-agent
+spec:
+  type: LoadBalancer
+  selector:
+    app: retail-agent
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http

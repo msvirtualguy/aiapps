@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neon-primary: #39FF14;
+  --neon-accent: #00F5FF;
+  --neon-hot: #FF10F0;
+  --neon-yellow: #FFE600;
+  --bg-dark: #080810;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --border-glass: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(57, 255, 20, 0.08) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0v40M40 0v40M0 0h40M0 40h40' stroke='%23ffffff06' stroke-width='1'/%3E%3C/svg%3E");
+  min-height: 100vh;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+
+  .glass-sm {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .neon-border {
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    box-shadow: 0 0 8px rgba(57, 255, 20, 0.15), inset 0 0 8px rgba(57, 255, 20, 0.05);
+  }
+
+  .neon-border-blue {
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.15), inset 0 0 8px rgba(0, 245, 255, 0.05);
+  }
+
+  .neon-border-pink {
+    border: 1px solid rgba(255, 16, 240, 0.3);
+    box-shadow: 0 0 8px rgba(255, 16, 240, 0.15), inset 0 0 8px rgba(255, 16, 240, 0.05);
+  }
+
+  .neon-glow-green {
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 40px rgba(57, 255, 20, 0.15);
+  }
+
+  .neon-glow-blue {
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.4), 0 0 40px rgba(0, 245, 255, 0.15);
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .text-neon-green { color: var(--neon-primary); }
+  .text-neon-blue { color: var(--neon-accent); }
+  .text-neon-pink { color: var(--neon-hot); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(57, 255, 20, 0.3);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(57, 255, 20, 0.6);
+}
