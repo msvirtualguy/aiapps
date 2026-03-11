@@ -18,7 +18,7 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'FutureStore — AI Shopping',
+  title: 'FreshCart — AI Shopping',
   description: 'The store of the future, powered by Nutanix Enterprise AI',
 }
 

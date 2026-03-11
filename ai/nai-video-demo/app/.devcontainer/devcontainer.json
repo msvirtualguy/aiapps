@@ -1,0 +1,7 @@
+{
+  "name": "nai-video-demo",
+  "image": "python:3.11-slim",
+  "features": {},
+  "postCreateCommand": "apt-get update && apt-get install -y ffmpeg && pip install fastapi uvicorn[standard] httpx",
+  "remoteUser": "root"
+}

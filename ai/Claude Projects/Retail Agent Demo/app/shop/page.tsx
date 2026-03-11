@@ -9,15 +9,15 @@ import { PersonaCard } from '@/components/camera/PersonaCard'
 import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
-import { Zap, ShoppingBag, User, ChevronRight } from 'lucide-react'
+import allProducts from '@/data/products.json'
+import { ShoppingCart, ShoppingBag, User, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { clsx } from 'clsx'
 
 export default function ShopPage() {
   const { persona } = usePersona()
   const { totalItems } = useCart()
   const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<Product[]>(allProducts as Product[])
   const [showCart, setShowCart] = useState(false)
 
   const handleCartUpdate = (items: CartItem[]) => {
@@ -35,9 +35,9 @@ export default function ShopPage() {
         <div className="flex items-center justify-between px-5 py-3">
           <button onClick={() => router.push('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-white" />
+              <ShoppingCart className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="font-bold text-slate-900 text-sm">FutureStore</span>
+            <span className="font-bold text-slate-900 text-sm">FreshCart</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default function ShopPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
-              {products.length > 0 ? `${products.length} Results` : 'Discover Products'}
+              {products.length > 0 ? `${products.length} Items` : 'All Products'}
             </h2>
             {products.length > 0 && (
               <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">

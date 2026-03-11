@@ -10,6 +10,8 @@ export interface Product {
   description: string
   imageUrl: string
   tags: string[]
+  rating: number
+  reviewCount: number
 }
 
 export interface CartItem {

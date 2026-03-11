@@ -11,9 +11,9 @@ import { clsx } from 'clsx'
 import Image from 'next/image'
 
 const FEATURES = [
-  { icon: Bot, label: 'AI Shopping Agent', desc: 'Natural language product search' },
-  { icon: Zap, label: 'Personalized Deals', desc: 'Tailored offers just for you' },
-  { icon: ShoppingBag, label: 'Smart Checkout', desc: 'AI-pre-filled shipping & payment' },
+  { icon: Bot, label: 'AI Grocery Assistant', desc: 'Ask about anything in the store' },
+  { icon: Zap, label: 'Personalized Deals', desc: 'Savings tailored to your household' },
+  { icon: ShoppingBag, label: 'Smart Checkout', desc: 'AI-pre-filled preferences & payment' },
 ]
 
 const DEMO_PERSONAS: Array<{
@@ -23,71 +23,71 @@ const DEMO_PERSONAS: Array<{
   persona: UserPersona
 }> = [
   {
-    imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=face&auto=format',
-    label: 'Gen Z',
-    sublabel: 'Teen · 16–20',
+    imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face&auto=format',
+    label: 'Family Shopper',
+    sublabel: 'Parent · feeding the family',
     persona: {
-      ageGroup: 'Teen (13-17)',
-      style: ['streetwear', 'hypebeast', 'bold'],
-      interests: ['gaming', 'sneakers', 'music', 'social media'],
-      preferredPayment: 'buy-now-pay-later',
+      ageGroup: 'Millennial (26-40)',
+      style: ['practical', 'value-focused', 'family-oriented'],
+      interests: ['cooking', 'meal prep', 'family meals', 'healthy eating', 'saving money'],
+      preferredPayment: 'card',
       shippingPreference: 'standard',
       personalizedDeals: [
-        { title: 'Gaming Drop', description: '15% off all Electronics', discount: '15% OFF', category: 'Electronics' },
-        { title: 'Fresh Kicks', description: 'BOGO on select Clothing', discount: 'BOGO', category: 'Clothing' },
+        { title: 'Family Pack Savings', description: 'Buy 2 get 1 free on Dairy & Eggs', discount: 'B2G1', category: 'Dairy & Eggs' },
+        { title: 'Fresh Produce Deal', description: '25% off all Produce today', discount: '25% OFF', category: 'Produce' },
       ],
-      vibe: 'hype culture gamer',
-    },
-  },
-  {
-    imageUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face&auto=format',
-    label: 'Young Adult',
-    sublabel: 'Millennial · 25–35',
-    persona: {
-      ageGroup: 'Young Adult (18-25)',
-      style: ['casual', 'modern', 'minimalist'],
-      interests: ['fitness', 'travel', 'cooking', 'wellness'],
-      preferredPayment: 'apple-pay',
-      shippingPreference: 'express',
-      personalizedDeals: [
-        { title: 'Wellness Bundle', description: '20% off Sports & Beauty', discount: '20% OFF', category: 'Sports' },
-        { title: 'Home Refresh', description: 'Free shipping on Home items', discount: 'FREE SHIP', category: 'Home & Garden' },
-      ],
-      vibe: 'aesthetic wellness girlie',
+      vibe: 'savvy family meal planner',
     },
   },
   {
     imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200&h=200&fit=crop&crop=face&auto=format',
-    label: 'Athlete',
-    sublabel: 'Active · 20–40',
+    label: 'Health Nut',
+    sublabel: 'Fitness-focused · clean eater',
     persona: {
-      ageGroup: 'Millennial (26-40)',
-      style: ['athletic', 'performance', 'sporty'],
-      interests: ['fitness', 'outdoor', 'nutrition', 'sports'],
-      preferredPayment: 'google-pay',
-      shippingPreference: 'overnight',
+      ageGroup: 'Young Adult (18-25)',
+      style: ['health-conscious', 'organic', 'performance'],
+      interests: ['fitness', 'nutrition', 'organic food', 'meal prep', 'wellness'],
+      preferredPayment: 'apple-pay',
+      shippingPreference: 'express',
       personalizedDeals: [
-        { title: 'Performance Gear', description: '25% off Sports & Fitness', discount: '25% OFF', category: 'Sports' },
-        { title: 'Fuel Up', description: 'BOGO on Food & Beverage', discount: 'BOGO', category: 'Food & Beverage' },
+        { title: 'Organic Week', description: '20% off all organic items', discount: '20% OFF', category: 'Produce' },
+        { title: 'Protein Boost', description: 'BOGO on Meat & Seafood', discount: 'BOGO', category: 'Meat & Seafood' },
       ],
-      vibe: 'elite performance athlete',
+      vibe: 'clean eating fitness fanatic',
+    },
+  },
+  {
+    imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop&crop=face&auto=format',
+    label: 'Party Host',
+    sublabel: 'Entertaining · snacks & drinks',
+    persona: {
+      ageGroup: 'Gen X (41-55)',
+      style: ['social', 'entertaining', 'generous'],
+      interests: ['entertaining', 'cooking', 'snacks', 'beverages', 'parties'],
+      preferredPayment: 'google-pay',
+      shippingPreference: 'express',
+      personalizedDeals: [
+        { title: 'Party Pack', description: 'Buy 2 get 1 free on Snacks', discount: 'B2G1', category: 'Snacks' },
+        { title: 'Drinks Deal', description: '15% off all Beverages', discount: '15% OFF', category: 'Beverages' },
+      ],
+      vibe: 'ultimate party host',
     },
   },
   {
     imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face&auto=format',
-    label: 'Professional',
-    sublabel: 'Gen X · 40–55',
+    label: 'Budget Savvy',
+    sublabel: 'Deal hunter · smart shopper',
     persona: {
-      ageGroup: 'Gen X (41-55)',
-      style: ['professional', 'classic', 'polished'],
-      interests: ['home improvement', 'cooking', 'travel', 'technology'],
-      preferredPayment: 'card',
+      ageGroup: 'Boomer (55+)',
+      style: ['budget-conscious', 'practical', 'value-focused'],
+      interests: ['saving money', 'bulk buying', 'coupons', 'meal planning'],
+      preferredPayment: 'buy-now-pay-later',
       shippingPreference: 'standard',
       personalizedDeals: [
-        { title: 'Smart Home', description: '10% off Electronics & Home', discount: '10% OFF', category: 'Home & Garden' },
-        { title: 'Gourmet Club', description: 'Buy 2 get 1 on Food items', discount: 'B2G1', category: 'Food & Beverage' },
+        { title: 'Weekly Specials', description: '30% off Pantry & Dry Goods', discount: '30% OFF', category: 'Pantry & Dry Goods' },
+        { title: 'Bakery Blowout', description: 'BOGO on all Bakery items', discount: 'BOGO', category: 'Bakery & Bread' },
       ],
-      vibe: 'polished power executive',
+      vibe: 'smart savings champion',
     },
   },
 ]
@@ -134,7 +134,7 @@ export default function WelcomePage() {
           <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
             <Zap className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-slate-900 tracking-tight">FutureStore</span>
+          <span className="text-lg font-bold text-slate-900 tracking-tight">FreshCart</span>
           <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600">
             Powered by Nutanix AI
           </span>
@@ -146,12 +146,12 @@ export default function WelcomePage() {
             className="space-y-6">
             <div>
               <h1 className="text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
-                Shopping,<br />
-                <span className="text-indigo-600">reimagined</span><br />
-                with AI.
+                Grocery<br />
+                <span className="text-indigo-600">shopping,</span><br />
+                supercharged.
               </h1>
               <p className="mt-4 text-lg text-slate-500 leading-relaxed">
-                Our AI scans your vibe, unlocks personalized deals, and helps you find exactly what you need — just by talking.
+                Our AI recognizes you, unlocks personalized deals, and helps you find exactly what you need — just by talking.
               </p>
             </div>
 
