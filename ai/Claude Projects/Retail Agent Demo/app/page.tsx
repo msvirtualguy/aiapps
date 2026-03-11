@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { WebcamCapture } from '@/components/camera/WebcamCapture'
 import { usePersona } from '@/context/PersonaContext'
 import type { UserPersona } from '@/lib/types'
-import { Zap, ShoppingBag, Bot, Shield } from 'lucide-react'
+import { Zap, ShoppingBag, Bot, Shield, Camera, Users } from 'lucide-react'
+import { clsx } from 'clsx'
 
 const FEATURES = [
   { icon: Bot, label: 'AI Shopping Agent', desc: 'Natural language product search' },
@@ -14,10 +15,88 @@ const FEATURES = [
   { icon: ShoppingBag, label: 'Smart Checkout', desc: 'AI-pre-filled shipping & payment' },
 ]
 
+const DEMO_PERSONAS: Array<{
+  emoji: string
+  label: string
+  sublabel: string
+  persona: UserPersona
+}> = [
+  {
+    emoji: '🎮',
+    label: 'Gen Z',
+    sublabel: 'Teen · 16–20',
+    persona: {
+      ageGroup: 'Teen (13-17)',
+      style: ['streetwear', 'hypebeast', 'bold'],
+      interests: ['gaming', 'sneakers', 'music', 'social media'],
+      preferredPayment: 'buy-now-pay-later',
+      shippingPreference: 'standard',
+      personalizedDeals: [
+        { title: 'Gaming Drop', description: '15% off all Electronics', discount: '15% OFF', category: 'Electronics' },
+        { title: 'Fresh Kicks', description: 'BOGO on select Clothing', discount: 'BOGO', category: 'Clothing' },
+      ],
+      vibe: 'hype culture gamer',
+    },
+  },
+  {
+    emoji: '✨',
+    label: 'Young Adult',
+    sublabel: 'Millennial · 25–35',
+    persona: {
+      ageGroup: 'Young Adult (18-25)',
+      style: ['casual', 'modern', 'minimalist'],
+      interests: ['fitness', 'travel', 'cooking', 'wellness'],
+      preferredPayment: 'apple-pay',
+      shippingPreference: 'express',
+      personalizedDeals: [
+        { title: 'Wellness Bundle', description: '20% off Sports & Beauty', discount: '20% OFF', category: 'Sports' },
+        { title: 'Home Refresh', description: 'Free shipping on Home items', discount: 'FREE SHIP', category: 'Home & Garden' },
+      ],
+      vibe: 'aesthetic wellness girlie',
+    },
+  },
+  {
+    emoji: '🏃',
+    label: 'Athlete',
+    sublabel: 'Active · 20–40',
+    persona: {
+      ageGroup: 'Millennial (26-40)',
+      style: ['athletic', 'performance', 'sporty'],
+      interests: ['fitness', 'outdoor', 'nutrition', 'sports'],
+      preferredPayment: 'google-pay',
+      shippingPreference: 'overnight',
+      personalizedDeals: [
+        { title: 'Performance Gear', description: '25% off Sports & Fitness', discount: '25% OFF', category: 'Sports' },
+        { title: 'Fuel Up', description: 'BOGO on Food & Beverage', discount: 'BOGO', category: 'Food & Beverage' },
+      ],
+      vibe: 'elite performance athlete',
+    },
+  },
+  {
+    emoji: '💼',
+    label: 'Professional',
+    sublabel: 'Gen X · 40–55',
+    persona: {
+      ageGroup: 'Gen X (41-55)',
+      style: ['professional', 'classic', 'polished'],
+      interests: ['home improvement', 'cooking', 'travel', 'technology'],
+      preferredPayment: 'card',
+      shippingPreference: 'standard',
+      personalizedDeals: [
+        { title: 'Smart Home', description: '10% off Electronics & Home', discount: '10% OFF', category: 'Home & Garden' },
+        { title: 'Gourmet Club', description: 'Buy 2 get 1 on Food items', discount: 'B2G1', category: 'Food & Beverage' },
+      ],
+      vibe: 'polished power executive',
+    },
+  },
+]
+
 export default function WelcomePage() {
   const router = useRouter()
   const { setPersona } = usePersona()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [tab, setTab] = useState<'scan' | 'demo'>('demo')
+  const [selectedDemo, setSelectedDemo] = useState<number | null>(null)
 
   const handleCapture = async (base64: string) => {
     setIsAnalyzing(true)
@@ -34,6 +113,12 @@ export default function WelcomePage() {
       setIsAnalyzing(false)
       router.push('/shop')
     }
+  }
+
+  const handleDemoSelect = (idx: number) => {
+    setSelectedDemo(idx)
+    setPersona(DEMO_PERSONAS[idx].persona)
+    setTimeout(() => router.push('/shop'), 300)
   }
 
   return (
@@ -86,20 +171,87 @@ export default function WelcomePage() {
             </div>
           </motion.div>
 
-          {/* Right: camera */}
+          {/* Right: card */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-            className="card p-8 space-y-6">
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900">Let&apos;s personalize your experience</h2>
-              <p className="text-sm text-slate-500 mt-1">Look into the camera to unlock your deals</p>
+            className="card overflow-hidden">
+
+            {/* Tabs */}
+            <div className="flex border-b border-slate-100">
+              <button
+                onClick={() => setTab('demo')}
+                className={clsx(
+                  'flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors',
+                  tab === 'demo'
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                    : 'text-slate-400 hover:text-slate-600'
+                )}>
+                <Users className="w-4 h-4" /> Demo Profiles
+              </button>
+              <button
+                onClick={() => setTab('scan')}
+                className={clsx(
+                  'flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors',
+                  tab === 'scan'
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                    : 'text-slate-400 hover:text-slate-600'
+                )}>
+                <Camera className="w-4 h-4" /> Scan Me
+              </button>
             </div>
 
-            <WebcamCapture onCapture={handleCapture} isAnalyzing={isAnalyzing} />
-
-            <button onClick={() => router.push('/shop')}
-              className="w-full text-sm text-slate-400 hover:text-slate-600 transition-colors text-center">
-              Skip — browse without personalization →
-            </button>
+            <AnimatePresence mode="wait">
+              {tab === 'demo' ? (
+                <motion.div key="demo"
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="p-6 space-y-4">
+                  <p className="text-sm text-slate-500 text-center">
+                    Pick a shopper profile to see AI personalization in action
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {DEMO_PERSONAS.map((p, idx) => (
+                      <motion.button
+                        key={p.label}
+                        onClick={() => handleDemoSelect(idx)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={clsx(
+                          'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all text-center',
+                          selectedDemo === idx
+                            ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-slate-50'
+                        )}>
+                        <span className="text-3xl">{p.emoji}</span>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">{p.label}</p>
+                          <p className="text-xs text-slate-400">{p.sublabel}</p>
+                        </div>
+                        {selectedDemo === idx && (
+                          <span className="text-xs font-semibold text-indigo-600">Loading...</span>
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+                  <button onClick={() => router.push('/shop')}
+                    className="w-full text-sm text-slate-400 hover:text-slate-600 transition-colors text-center pt-1">
+                    Skip — browse without personalization →
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div key="scan"
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="p-8 space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-xl font-bold text-slate-900">Let&apos;s personalize your experience</h2>
+                    <p className="text-sm text-slate-500 mt-1">Look into the camera to unlock your deals</p>
+                  </div>
+                  <WebcamCapture onCapture={handleCapture} isAnalyzing={isAnalyzing} />
+                  <button onClick={() => router.push('/shop')}
+                    className="w-full text-sm text-slate-400 hover:text-slate-600 transition-colors text-center">
+                    Skip — browse without personalization →
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>
