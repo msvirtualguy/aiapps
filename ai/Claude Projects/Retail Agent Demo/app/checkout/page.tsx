@@ -90,9 +90,13 @@ export default function CheckoutPage() {
           className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 text-sm font-medium transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center ml-2">
-          <Zap className="w-3 h-3 text-white" />
-        </div>
+        <Image
+          src="https://www.cswg.com/wp-content/uploads/2026/01/CS_Wholesale_Grocers_logo.svg"
+          alt="C&S Wholesale Grocers"
+          width={110}
+          height={28}
+          className="h-7 w-auto ml-2"
+        />
         <span className="font-bold text-slate-900 text-sm">Checkout</span>
       </div>
 
@@ -122,17 +126,17 @@ export default function CheckoutPage() {
         <div className="card p-5">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
             <Truck className="w-4 h-4" /> Shipping
-            {persona && <span className="ml-auto text-xs font-semibold text-indigo-500 normal-case">AI pre-selected</span>}
+            {persona && <span className="ml-auto text-xs font-semibold text-brand-500 normal-case">AI pre-selected</span>}
           </h2>
           <div className="space-y-2">
             {SHIPPING_OPTIONS.map(option => (
               <label key={option.id}
                 className={clsx('flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all',
-                  shipping === option.id ? 'border-indigo-300 bg-indigo-50 ring-1 ring-indigo-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+                  shipping === option.id ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
                 <div className="flex items-center gap-3">
                   <div className={clsx('w-4 h-4 rounded-full border-2 flex items-center justify-center',
-                    shipping === option.id ? 'border-indigo-600' : 'border-slate-300')}>
-                    {shipping === option.id && <div className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    shipping === option.id ? 'border-brand-600' : 'border-slate-300')}>
+                    {shipping === option.id && <div className="w-2 h-2 rounded-full bg-brand-600" />}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{option.label}</p>
@@ -152,13 +156,13 @@ export default function CheckoutPage() {
         <div className="card p-5">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
             <CreditCard className="w-4 h-4" /> Payment
-            {persona && <span className="ml-auto text-xs font-semibold text-indigo-500 normal-case">AI pre-selected</span>}
+            {persona && <span className="ml-auto text-xs font-semibold text-brand-500 normal-case">AI pre-selected</span>}
           </h2>
           <div className="grid grid-cols-2 gap-2 mb-4">
             {PAYMENT_METHODS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setPayment(id)}
                 className={clsx('flex items-center gap-2.5 p-3 rounded-xl border transition-all',
-                  payment === id ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300')}>
+                  payment === id ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300')}>
                 <Icon className="w-4 h-4 shrink-0" />
                 <span className="text-xs font-semibold">{label}</span>
               </button>
@@ -175,7 +179,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <div className="card p-5 border-indigo-200 ring-1 ring-indigo-100">
+        <div className="card p-5 border-brand-200 ring-1 ring-brand-100">
           <div className="space-y-2 mb-5">
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Subtotal</span>

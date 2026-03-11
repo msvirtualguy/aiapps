@@ -12,7 +12,7 @@ interface GlassCardProps {
 
 export function GlassCard({ children, className, neon, onClick }: GlassCardProps) {
   const highlightClass = neon && neon !== 'none'
-    ? 'border-indigo-300 ring-1 ring-indigo-100'
+    ? 'border-brand-300 ring-1 ring-brand-100'
     : ''
 
   return (

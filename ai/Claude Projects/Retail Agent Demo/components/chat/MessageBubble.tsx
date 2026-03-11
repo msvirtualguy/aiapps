@@ -17,10 +17,10 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
     >
       <div className={clsx(
         'shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5',
-        isUser ? 'bg-indigo-100' : 'bg-slate-100'
+        isUser ? 'bg-brand-100' : 'bg-slate-100'
       )}>
         {isUser
-          ? <User className="w-3.5 h-3.5 text-indigo-600" />
+          ? <User className="w-3.5 h-3.5 text-brand-600" />
           : <Bot className="w-3.5 h-3.5 text-slate-600" />
         }
       </div>
@@ -41,7 +41,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           <div className={clsx(
             'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
             isUser
-              ? 'bg-indigo-600 text-white rounded-tr-sm'
+              ? 'bg-brand-600 text-white rounded-tr-sm'
               : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
           )}>
             {message.content}

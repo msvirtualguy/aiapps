@@ -19,7 +19,7 @@ export function CartSidebar() {
           <span className="text-sm font-bold text-slate-900">Cart</span>
         </div>
         {totalItems > 0 && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-700">
             {totalItems}
           </span>
         )}

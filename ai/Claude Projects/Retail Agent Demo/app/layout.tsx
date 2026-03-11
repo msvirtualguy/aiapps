@@ -18,8 +18,8 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'FreshCart — AI Shopping',
-  description: 'The store of the future, powered by Nutanix Enterprise AI',
+  title: 'C&S Wholesale Grocers — AI Shopping Demo',
+  description: 'AI-powered grocery shopping experience, powered by Nutanix Enterprise AI',
 }
 
 export default function RootLayout({

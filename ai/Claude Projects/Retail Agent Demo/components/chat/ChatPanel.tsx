@@ -43,8 +43,8 @@ export function ChatPanel({ persona, onProductsFound, onCartUpdate }: ChatPanelP
     <div className="card flex flex-col h-full min-h-0 overflow-hidden p-0">
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-indigo-600" />
+        <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-brand-600" />
         </div>
         <div>
           <p className="text-sm font-bold text-slate-900">ShopBot</p>
@@ -63,7 +63,7 @@ export function ChatPanel({ persona, onProductsFound, onCartUpdate }: ChatPanelP
             <div className="flex flex-wrap gap-2 justify-center">
               {QUICK_PROMPTS.map(p => (
                 <button key={p} onClick={() => sendMessage(p, persona)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm">
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-600 hover:bg-brand-50 transition-all shadow-sm">
                   {p}
                 </button>
               ))}
@@ -79,7 +79,7 @@ export function ChatPanel({ persona, onProductsFound, onCartUpdate }: ChatPanelP
       <div className="px-3 py-3 border-t border-slate-100 bg-white">
         <div className={clsx(
           'flex items-center gap-2 rounded-xl px-3 py-2 border transition-all',
-          'bg-slate-50 focus-within:bg-white focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100',
+          'bg-slate-50 focus-within:bg-white focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100',
           isLoading ? 'border-slate-200' : 'border-slate-200'
         )}>
           <input
@@ -93,7 +93,7 @@ export function ChatPanel({ persona, onProductsFound, onCartUpdate }: ChatPanelP
           />
           <button onClick={handleSend} disabled={!input.trim() || isLoading}
             className={clsx('p-1.5 rounded-lg transition-all',
-              input.trim() && !isLoading ? 'text-indigo-600 hover:bg-indigo-50' : 'text-slate-300 cursor-not-allowed'
+              input.trim() && !isLoading ? 'text-brand-600 hover:bg-brand-50' : 'text-slate-300 cursor-not-allowed'
             )}>
             <Send className="w-3.5 h-3.5" />
           </button>

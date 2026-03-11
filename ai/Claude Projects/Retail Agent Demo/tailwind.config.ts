@@ -10,12 +10,16 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          50: '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
+          50:  '#fff0f0',
+          100: '#ffe0e0',
+          200: '#fca5a5',
+          300: '#f99090',
+          400: '#f76060',
+          500: '#F33F3F',
+          600: '#F33F3F',
+          700: '#d43535',
+          800: '#b52b2b',
+          charcoal: '#32373C',
         },
       },
       fontFamily: {
@@ -44,7 +48,7 @@ const config: Config = {
       boxShadow: {
         'card': '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
         'card-hover': '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
-        'brand': '0 4px 14px rgba(99,102,241,0.25)',
+        'brand': '0 4px 14px rgba(243,63,63,0.25)',
       },
     },
   },

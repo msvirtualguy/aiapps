@@ -22,7 +22,7 @@ export function CartItem({ item }: { item: CartItemType }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-slate-800 leading-tight line-clamp-2">{item.product.name}</p>
-        <p className="text-xs font-bold text-indigo-600 mt-0.5">${(price * item.quantity).toFixed(2)}</p>
+        <p className="text-xs font-bold text-brand-600 mt-0.5">${(price * item.quantity).toFixed(2)}</p>
         <div className="flex items-center gap-1.5 mt-1.5">
           <button onClick={() => updateItem(item.product.id, item.quantity - 1)}
             className="w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">

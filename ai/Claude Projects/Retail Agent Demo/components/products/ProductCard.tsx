@@ -106,7 +106,7 @@ export function ProductCard({ product }: { product: Product }) {
               ? 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'
               : added
               ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95'
+              : 'bg-brand-600 text-white hover:bg-brand-700 active:scale-95'
           )}>
           {added
             ? <><CheckCircle className="w-4 h-4" /> Added!</>

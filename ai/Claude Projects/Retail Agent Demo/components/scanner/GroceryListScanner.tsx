@@ -103,7 +103,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-brand-600 flex items-center justify-center">
               <ScanLine className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -124,7 +124,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
             onClick={() => fileRef.current?.click()}
             className={clsx(
               'relative rounded-2xl border-2 border-dashed cursor-pointer transition-all overflow-hidden',
-              preview ? 'border-indigo-200' : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30'
+              preview ? 'border-brand-200' : 'border-slate-200 hover:border-brand-300 hover:bg-brand-50/30'
             )}
             style={{ minHeight: preview ? 200 : 120 }}
           >
@@ -133,9 +133,9 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
                 <Image src={preview} alt="List preview" fill className="object-contain" />
                 {/* Scan animation overlay */}
                 {scanning && (
-                  <div className="absolute inset-0 bg-indigo-900/10">
+                  <div className="absolute inset-0 bg-[#32373C]/10">
                     <motion.div
-                      className="absolute left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_0_12px_3px_rgba(99,102,241,0.7)]"
+                      className="absolute left-0 right-0 h-0.5 bg-brand-500 shadow-[0_0_12px_3px_rgba(243,63,63,0.7)]"
                       initial={{ top: '0%' }}
                       animate={{ top: ['0%', '100%', '0%'] }}
                       transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }}
@@ -159,13 +159,13 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
 
           {/* Scan status */}
           {scanning && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-50 border border-brand-100">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-4 h-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full shrink-0"
+                className="w-4 h-4 border-2 border-brand-300 border-t-brand-600 rounded-full shrink-0"
               />
-              <p className="text-sm font-medium text-indigo-700">
+              <p className="text-sm font-medium text-brand-700">
                 {stage === 'reading' ? 'Reading your list...' : 'Finding items in store...'}
               </p>
             </div>
@@ -189,7 +189,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
                 {matchedCount > 0 && added.size < matchedCount && (
                   <button
                     onClick={handleAddAll}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-800 transition-colors"
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     Add all to cart
@@ -211,7 +211,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
                         isAdded
                           ? 'border-emerald-200 bg-emerald-50'
                           : item.product
-                          ? 'border-slate-200 bg-white hover:border-indigo-200'
+                          ? 'border-slate-200 bg-white hover:border-brand-200'
                           : 'border-slate-100 bg-slate-50'
                       )}
                     >
@@ -229,9 +229,9 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
 
                       {/* Aisle badge */}
                       {item.aisle && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-100 shrink-0">
-                          <MapPin className="w-3 h-3 text-indigo-500" />
-                          <span className="text-xs font-bold text-indigo-600">{item.aisle}</span>
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-brand-50 border border-brand-100 shrink-0">
+                          <MapPin className="w-3 h-3 text-brand-500" />
+                          <span className="text-xs font-bold text-brand-600">{item.aisle}</span>
                         </div>
                       )}
 
@@ -244,7 +244,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
                             'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all',
                             isAdded
                               ? 'bg-emerald-100 text-emerald-600'
-                              : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95'
+                              : 'bg-brand-600 text-white hover:bg-brand-700 active:scale-95'
                           )}
                         >
                           {isAdded
@@ -266,7 +266,7 @@ export function GroceryListScanner({ onClose }: GroceryListScannerProps) {
           {preview && !scanning && items.length === 0 && (
             <button
               onClick={handleScan}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 active:scale-[0.98] transition-all"
             >
               <ScanLine className="w-4 h-4" />
               Scan List

@@ -20,8 +20,8 @@ export function NeonButton({
   ...props
 }: NeonButtonProps) {
   const variantStyles = {
-    green: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-brand',
-    blue:  'bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50',
+    green: 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand',
+    blue:  'bg-white text-brand-600 border border-brand-200 hover:bg-brand-50',
     pink:  'bg-rose-500 text-white hover:bg-rose-600',
   }
 

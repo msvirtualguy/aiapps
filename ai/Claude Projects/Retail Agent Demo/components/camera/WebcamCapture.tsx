@@ -31,15 +31,15 @@ export function WebcamCapture({ onCapture, isAnalyzing }: WebcamCaptureProps) {
       <div className={clsx(
         'relative w-72 h-72 rounded-3xl overflow-hidden bg-slate-100',
         'border-2 transition-colors',
-        isReady ? 'border-indigo-300' : 'border-slate-200'
+        isReady ? 'border-brand-300' : 'border-slate-200'
       )}>
         {/* Corner guides */}
         {isReady && !isAnalyzing && (
           <div className="absolute inset-0 z-10 pointer-events-none">
-            <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-indigo-500 rounded-tl-lg" />
-            <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-indigo-500 rounded-tr-lg" />
-            <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-indigo-500 rounded-bl-lg" />
-            <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-indigo-500 rounded-br-lg" />
+            <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-brand-500 rounded-tl-lg" />
+            <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-brand-500 rounded-tr-lg" />
+            <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-brand-500 rounded-bl-lg" />
+            <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-brand-500 rounded-br-lg" />
           </div>
         )}
 
@@ -47,7 +47,7 @@ export function WebcamCapture({ onCapture, isAnalyzing }: WebcamCaptureProps) {
         {isAnalyzing && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
             <LoadingSpinner size="lg" color="green" />
-            <p className="mt-4 text-indigo-600 font-semibold text-sm">Analyzing your style...</p>
+            <p className="mt-4 text-brand-600 font-semibold text-sm">Analyzing your style...</p>
           </div>
         )}
 
@@ -76,7 +76,7 @@ export function WebcamCapture({ onCapture, isAnalyzing }: WebcamCaptureProps) {
       <div className="flex items-center gap-2 text-slate-400 text-xs">
         <Camera className="w-3.5 h-3.5" />
         {isReady ? (
-          <span className="text-indigo-600 font-medium">Camera ready</span>
+          <span className="text-brand-600 font-medium">Camera ready</span>
         ) : error ? (
           <span>Demo mode — no camera needed</span>
         ) : (

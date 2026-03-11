@@ -38,11 +38,11 @@ export function PersonaCard({ persona, loading }: PersonaCardProps) {
   if (!persona) return null
 
   return (
-    <div className="card p-4 space-y-3 border-indigo-200 ring-1 ring-indigo-100">
+    <div className="card p-4 space-y-3 border-brand-200 ring-1 ring-brand-100">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-indigo-500" />
-          <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Your Vibe</span>
+          <Sparkles className="w-4 h-4 text-brand-500" />
+          <span className="text-xs font-bold text-brand-600 uppercase tracking-wide">Your Vibe</span>
         </div>
         <span className="text-[10px] text-slate-400">{persona.ageGroup}</span>
       </div>
@@ -51,7 +51,7 @@ export function PersonaCard({ persona, loading }: PersonaCardProps) {
 
       <div className="flex flex-wrap gap-1.5">
         {persona.style.map(s => (
-          <span key={s} className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 capitalize">
+          <span key={s} className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-700 capitalize">
             {s}
           </span>
         ))}

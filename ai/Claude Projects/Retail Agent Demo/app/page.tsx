@@ -130,12 +130,16 @@ export default function WelcomePage() {
       <div className="max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-2 mb-12">
-          <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-slate-900 tracking-tight">FreshCart</span>
-          <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600">
+          className="flex items-center justify-center gap-3 mb-12">
+          <Image
+            src="https://www.cswg.com/wp-content/uploads/2026/01/CS_Wholesale_Grocers_logo.svg"
+            alt="C&S Wholesale Grocers"
+            width={200}
+            height={48}
+            className="h-10 w-auto"
+            priority
+          />
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-600">
             Powered by Nutanix AI
           </span>
         </motion.div>
@@ -147,7 +151,7 @@ export default function WelcomePage() {
             <div>
               <h1 className="text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
                 Grocery<br />
-                <span className="text-indigo-600">shopping,</span><br />
+                <span className="text-brand-600">shopping,</span><br />
                 supercharged.
               </h1>
               <p className="mt-4 text-lg text-slate-500 leading-relaxed">
@@ -158,8 +162,8 @@ export default function WelcomePage() {
             <div className="space-y-3">
               {FEATURES.map(({ icon: Icon, label, desc }) => (
                 <div key={label} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-indigo-600" />
+                  <div className="w-8 h-8 rounded-lg bg-brand-100 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-brand-600" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{label}</p>
@@ -186,7 +190,7 @@ export default function WelcomePage() {
                 className={clsx(
                   'flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors',
                   tab === 'demo'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                    ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50/50'
                     : 'text-slate-400 hover:text-slate-600'
                 )}>
                 <Users className="w-4 h-4" /> Demo Profiles
@@ -196,7 +200,7 @@ export default function WelcomePage() {
                 className={clsx(
                   'flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors',
                   tab === 'scan'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                    ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50/50'
                     : 'text-slate-400 hover:text-slate-600'
                 )}>
                 <Camera className="w-4 h-4" /> Scan Me
@@ -224,10 +228,10 @@ export default function WelcomePage() {
                           className={clsx(
                             'flex flex-col items-center gap-2.5 p-3 rounded-2xl border-2 transition-all text-center overflow-hidden',
                             isScanning
-                              ? 'border-indigo-500 bg-indigo-50 shadow-lg shadow-indigo-100'
+                              ? 'border-brand-500 bg-brand-50 shadow-lg shadow-brand-100'
                               : isDisabled
                               ? 'border-slate-100 bg-slate-50 opacity-40'
-                              : 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm'
+                              : 'border-slate-200 bg-white hover:border-brand-300 hover:shadow-sm'
                           )}>
                           {/* Headshot with scan overlay */}
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden">
@@ -241,26 +245,26 @@ export default function WelcomePage() {
                             {/* Corner brackets */}
                             {!isScanning && (
                               <div className="absolute inset-0 pointer-events-none">
-                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
-                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
-                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
-                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-indigo-400 rounded-br" />
+                                <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-brand-400 rounded-tl" />
+                                <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-brand-400 rounded-tr" />
+                                <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-brand-400 rounded-bl" />
+                                <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-brand-400 rounded-br" />
                               </div>
                             )}
                             {/* Scan animation */}
                             {isScanning && (
                               <div className="absolute inset-0 bg-indigo-900/20">
                                 <motion.div
-                                  className="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_8px_2px_rgba(99,102,241,0.8)]"
+                                  className="absolute left-0 right-0 h-0.5 bg-indigo-400 shadow-[0_0_8px_2px_rgba(243,63,63,0.8)]"
                                   initial={{ top: '0%' }}
                                   animate={{ top: ['0%', '100%', '0%'] }}
                                   transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
                                 />
                                 <div className="absolute inset-0 pointer-events-none">
-                                  <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-indigo-400 rounded-tl" />
-                                  <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-indigo-400 rounded-tr" />
-                                  <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-indigo-400 rounded-bl" />
-                                  <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-indigo-400 rounded-br" />
+                                  <div className="absolute top-1 left-1 w-3 h-3 border-t-2 border-l-2 border-brand-400 rounded-tl" />
+                                  <div className="absolute top-1 right-1 w-3 h-3 border-t-2 border-r-2 border-brand-400 rounded-tr" />
+                                  <div className="absolute bottom-1 left-1 w-3 h-3 border-b-2 border-l-2 border-brand-400 rounded-bl" />
+                                  <div className="absolute bottom-1 right-1 w-3 h-3 border-b-2 border-r-2 border-brand-400 rounded-br" />
                                 </div>
                               </div>
                             )}
@@ -270,7 +274,7 @@ export default function WelcomePage() {
                             <p className="text-xs text-slate-400">{p.sublabel}</p>
                           </div>
                           {isScanning && (
-                            <div className="flex items-center gap-1 text-xs font-semibold text-indigo-600">
+                            <div className="flex items-center gap-1 text-xs font-semibold text-brand-600">
                               <ScanFace className="w-3.5 h-3.5" />
                               Scanning...
                             </div>

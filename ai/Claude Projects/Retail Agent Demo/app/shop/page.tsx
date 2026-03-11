@@ -11,8 +11,9 @@ import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
 import allProducts from '@/data/products.json'
-import { ShoppingCart, ShoppingBag, User, ChevronRight, ScanLine } from 'lucide-react'
+import { ShoppingBag, User, ChevronRight, ScanLine } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function ShopPage() {
   const { persona } = usePersona()
@@ -35,18 +36,22 @@ export default function ShopPage() {
         className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm"
       >
         <div className="flex items-center justify-between px-5 py-3">
-          <button onClick={() => router.push('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <ShoppingCart className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-slate-900 text-sm">FreshCart</span>
+          <button onClick={() => router.push('/')} className="hover:opacity-80 transition-opacity">
+            <Image
+              src="https://www.cswg.com/wp-content/uploads/2026/01/CS_Wholesale_Grocers_logo.svg"
+              alt="C&S Wholesale Grocers"
+              width={140}
+              height={36}
+              className="h-8 w-auto"
+              priority
+            />
           </button>
 
           <div className="flex items-center gap-2">
             {persona && (
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100">
-                <User className="w-3 h-3 text-indigo-500" />
-                <span className="text-xs font-semibold text-indigo-700 capitalize">{persona.vibe}</span>
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-100">
+                <User className="w-3 h-3 text-brand-500" />
+                <span className="text-xs font-semibold text-brand-700 capitalize">{persona.vibe}</span>
               </div>
             )}
             <button onClick={() => setShowScanner(true)}
@@ -55,11 +60,11 @@ export default function ShopPage() {
               <span className="text-xs font-semibold text-emerald-700">Scan List</span>
             </button>
             <button onClick={() => setShowCart(!showCart)}
-              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+              className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-200 hover:bg-brand-50 transition-all">
               <ShoppingBag className="w-4 h-4 text-slate-600" />
               <span className="text-xs font-semibold text-slate-700">Cart</span>
               {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-brand-600 text-white text-[9px] font-bold flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
@@ -95,7 +100,7 @@ export default function ShopPage() {
               {products.length > 0 ? `${products.length} Items` : 'All Products'}
             </h2>
             {products.length > 0 && (
-              <span className="flex items-center gap-1 text-xs text-indigo-600 font-medium">
+              <span className="flex items-center gap-1 text-xs text-brand-600 font-medium">
                 AI-powered search <ChevronRight className="w-3 h-3" />
               </span>
             )}
