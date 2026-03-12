@@ -41,6 +41,43 @@ Rules:
 - Stay in character as a knowledgeable, friendly grocery store assistant.`
 }
 
+// Normalize: lowercase, strip diacritics (Häagen→haagen), collapse punctuation to spaces
+function normalize(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findProduct(query: string): Product | undefined {
+  // 1. Exact ID match
+  const byId = productMap.get(query)
+  if (byId) return byId
+
+  const needle = normalize(query)
+  const needleCompact = needle.replace(/\s/g, '')
+  const needleWords = needle.split(' ').filter(w => w.length > 2)
+
+  return (products as Product[]).find(p => {
+    const haystack = normalize(p.name)
+    // 2. Substring match (handles "grain free" vs "grain-free", diacritics, etc.)
+    if (haystack.includes(needle) || needle.includes(haystack.replace(/\s*\([^)]*\)\s*$/, '').trim())) return true
+    if (p.id.toLowerCase() === query.toLowerCase()) return true
+    // 3. Compact match: strips all spaces so "boars" matches "boar s" (from Boar's)
+    const haystackCompact = haystack.replace(/\s/g, '')
+    if (haystackCompact.includes(needleCompact)) return true
+    // 4. Word-score: ≥70% of significant query words appear in the product name
+    if (needleWords.length > 0) {
+      const hits = needleWords.filter(w => haystack.includes(w) || haystackCompact.includes(w)).length
+      return hits >= Math.ceil(needleWords.length * 0.7)
+    }
+    return false
+  })
+}
+
 async function dispatchTool(
   toolCall: OpenAI.Chat.ChatCompletionMessageToolCall,
   sessionId: string,
@@ -59,30 +96,17 @@ async function dispatchTool(
       summary = `Found ${(result as Product[]).length} products matching "${args.query}"`
 
     } else if (name === 'get_product_details') {
-      // Try exact ID match first, then fall back to case-insensitive name search
-      result = productMap.get(args.product_id)
-      if (!result) {
-        const needle = String(args.product_id).toLowerCase()
-        result = (products as Product[]).find(
-          p => p.name.toLowerCase().includes(needle) || p.id.toLowerCase() === needle
-        ) ?? { error: 'Product not found' }
-      }
+      result = findProduct(String(args.product_id)) ?? { error: 'Product not found' }
       summary = `Retrieved details for ${(result as Product)?.name ?? args.product_id}`
 
     } else if (name === 'add_to_cart') {
       const cart = getCart(sessionId)
-      let product = productMap.get(args.product_id)
-      if (!product) {
-        const needle = String(args.product_id).toLowerCase()
-        product = (products as Product[]).find(
-          p => p.name.toLowerCase().includes(needle) || p.id.toLowerCase() === needle
-        )
-      }
+      const product = findProduct(String(args.product_id))
       if (!product) {
         result = { error: 'Product not found' }
         summary = 'Product not found'
       } else {
-        const existing = cart.find(i => i.product.id === args.product_id)
+        const existing = cart.find(i => i.product.id === product.id)
         const qty = args.quantity ?? 1
         if (existing) {
           existing.quantity += qty
