@@ -6,43 +6,41 @@ A GenZ-focused AI-powered grocery shopping demo built on **Nutanix Enterprise AI
 
 ## Architecture Overview
 
+> **Interactive visual diagram** is available at `/architecture` in the running app — color-coded nested boxes showing all infrastructure layers (Nutanix AHV → K3s → Next.js → NAI → Storage).
+
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          Browser (Next.js Client)                        │
-│                                                                           │
-│  ┌────────────────┐   ┌──────────────────────────┐   ┌────────────────┐ │
-│  │  / (Welcome)   │   │     /shop                │   │  /checkout     │ │
-│  │                │   │                          │   │                │ │
-│  │  Webcam/Demo   │   │  ┌────────┬──────────────│   │  ApplePay      │ │
-│  │  Persona       │──▶│  │ Chat   │ Products     │──▶│  Venmo         │ │
-│  │  Detection     │   │  │ Panel  │ Grid         │   │  Credit/Debit  │ │
-│  │                │   │  │        ├──────────────│   │  Card Form     │ │
-│  └────────────────┘   │  │        │ Cart         │   └────────────────┘ │
-│                        │  └────────┴──────────────│                      │
-│                        │  PastOrdersModal          │                      │
-│                        │  GroceryListScanner       │                      │
-└───────────────────────────────────────────────────────────────────────────┘
-                                    │ HTTP + SSE
-┌───────────────────────────────────▼───────────────────────────────────────┐
-│                         Next.js API Routes (server-side)                   │
-│                                                                             │
-│  POST /api/analyze-user   POST /api/chat       POST /api/search-products   │
-│  Vision model → Persona   SSE Agentic Loop     Embeddings → ranked results │
-│                                                                             │
-│  POST /api/scan-list      POST /api/cart        GET /api/products/[id]     │
-│  OCR grocery list         Cart CRUD             Product detail lookup      │
-└─────────────────────────────────┬───────────────────────────────────────────┘
-                                  │ OpenAI-compatible REST
-┌─────────────────────────────────▼───────────────────────────────────────────┐
-│                    Nutanix Enterprise AI (NAI)                               │
-│                    https://192.168.110.51/enterpriseai/v1                   │
-│                                                                               │
-│   ┌────────────────────────┐  ┌──────────────────┐  ┌────────────────────┐  │
-│   │  LLM (qwen25-vl7b)     │  │  Vision Model    │  │  Embeddings Model  │  │
-│   │  Tool calling, chat,   │  │  (qwen25-vl7b)   │  │  (ll-nemo-embed)   │  │
-│   │  agentic loop          │  │  Persona detect  │  │  Semantic search   │  │
-│   └────────────────────────┘  └──────────────────┘  └────────────────────┘  │
-└───────────────────────────────────────────────────────────────────────────────┘
+ Nutanix AHV Hypervisor
+ ┌─────────────────────────────────────────────────────────────────────────┐
+ │  K3s Kubernetes Cluster  (retail-agent namespace)                        │
+ │  ┌────────────────────────────────────────────────────┐  ┌────────────┐ │
+ │  │  Next.js 14 App  (port 3000)                       │  │  MetalLB   │ │
+ │  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │  │  Service   │ │
+ │  │  │ /        │  │ /shop    │  │ /checkout        │ │  │  80 → 3000 │ │
+ │  │  │ Webcam + │→ │ Chat +   │→ │ ApplePay / Venmo │ │  └────────────┘ │
+ │  │  │ Personas │  │ Products │  │ Card / Debit     │ │        ↑         │
+ │  │  └──────────┘  │ + Cart   │  └──────────────────┘ │    HTTPS/LB     │
+ │  │                └──────────┘  + /architecture       │        │         │
+ │  │  API: /analyze-user  /chat  /search-products       │  User / Browser │
+ │  │       /scan-list     /cart  /products/[id]         │                 │
+ │  └──────────────────────┬─────────────────────────────┘                 │
+ │                          │  HTTPS (OpenAI-compatible REST)               │
+ │  ┌───────────────────────▼───────────────────────────────────────────┐  │
+ │  │  NAI — Nutanix AI Inference Service                                │  │
+ │  │  https://192.168.110.51/enterpriseai/v1                           │  │
+ │  │  ┌────────────────────────────┐  ┌─────────────────────────────┐  │  │
+ │  │  │  LLM + Vision              │  │  Embeddings                 │  │  │
+ │  │  │  qwen25-vl7b-in-nvfp4      │  │  ll-nemo-embed-1b-v2        │  │  │
+ │  │  │  Chat · Tool calls · SSE   │  │  Product vectorization      │  │  │
+ │  │  │  Webcam persona detect     │  │  Cosine similarity search   │  │  │
+ │  │  │  Grocery list OCR          │  │  Zero-shot intent matching  │  │  │
+ │  │  └────────────────────────────┘  └─────────────────────────────┘  │  │
+ │  └───────────────────────────────────────────────────────────────────┘  │
+ │                                                                           │
+ │  ┌───────────────────────────────────────────────────────────────────┐  │
+ │  │  Nutanix Unified Storage                                           │  │
+ │  │  LLM model weights & configs  ·  Persistent block storage (PVC)   │  │
+ │  └───────────────────────────────────────────────────────────────────┘  │
+ └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -53,35 +51,36 @@ A GenZ-focused AI-powered grocery shopping demo built on **Nutanix Enterprise AI
 User types: "I need something high in protein under $10"
                         │
                         ▼
-         POST /api/chat  (with persona + cart context)
+         POST /api/chat  (persona + cart injected into system prompt)
                         │
                         ▼
          ┌──────────────────────────────┐
          │   LLM System Prompt          │
-         │   - FreshBot persona         │
-         │   - Customer profile         │
-         │   - Current cart contents    │
+         │   · FreshBot persona         │
+         │   · Customer profile         │
+         │   · Current cart contents    │
          └──────────────────────────────┘
                         │
                         ▼
          LLM decides → call tool: search_inventory
                         │
-                  SSE event pushed:
+                  SSE event pushed to client:
                   { type: 'tool_call', name: 'search_inventory', status: 'running' }
                         │
                         ▼
-         embeddings-cache.ts: cosine_sim(query_embedding, product_embeddings)
+         embeddings-cache.ts:
+         cosine_sim(embed(query), cached_product_embeddings)
          → returns top-6 ranked product IDs
                         │
-                  SSE event pushed:
-                  { type: 'products', data: [...] }
+                  SSE events pushed:
+                  { type: 'products', data: [ ...Product[] ] }
                   { type: 'tool_call', name: 'search_inventory', status: 'done' }
                         │
                         ▼
-         LLM generates response with results
+         LLM generates final response
                         │
                   SSE event pushed:
-                  { type: 'message', content: "Here are some great protein options..." }
+                  { type: 'message', content: "Here are some great options..." }
 ```
 
 ---
@@ -98,20 +97,20 @@ User clicks "Scan Me" on welcome page
   POST /api/analyze-user { image: base64 }
                 │
                 ▼
-  NAI Vision Model (qwen25-vl7b)
+  NAI Vision Model (qwen25-vl7b-in-nvfp4)
   Prompt: analyze appearance → return persona JSON
                 │
           ┌─────┴─────┐
-          │  Success  │  Failure / no JSON
+          │  Success  │  Failure / non-JSON response
           ▼           ▼
-     Persona JSON   DEFAULT_PERSONA
+     Persona JSON   DEFAULT_PERSONA (never blocks shopping)
      { name, ageGroup, style, interests,
        preferredPayment, paymentDetails,
        shippingPreference, personalizedDeals,
        vibe, pastOrders }
                 │
                 ▼
-  PersonaContext → localStorage → /shop
+  PersonaContext → localStorage → navigate to /shop
 ```
 
 ---
@@ -119,15 +118,20 @@ User clicks "Scan Me" on welcome page
 ## Data Flow: Cart & State
 
 ```
-PersonaContext (React Context + localStorage "futurestore_persona")
+PersonaContext  (React Context + localStorage "futurestore_persona")
        │
-       └── persona.pastOrders → PastOrdersModal → "Reorder All" / cherry-pick
+       └── persona.pastOrders → PastOrdersModal
+                                  ├── "Reorder All"  → ADD all items to cart
+                                  └── cherry-pick checkboxes → ADD selected
 
-CartContext (React Context + localStorage "futurestore_cart")
+CartContext  (React Context + localStorage "futurestore_cart")
        │
-       ├── /api/chat add_to_cart tool → dispatches SYNC action
-       ├── ProductCard "Add to Cart" button → dispatches ADD action
-       └── CartSidebar → /checkout → payment simulation
+       ├── /api/chat  add_to_cart tool  → dispatches SYNC action
+       ├── ProductCard "Add to Cart"    → dispatches ADD action
+       └── CartSidebar → /checkout
+                           ├── ApplePay panel  (persona.paymentDetails.type)
+                           ├── Venmo panel
+                           └── Card form (pre-filled last4, network)
 ```
 
 ---
@@ -141,7 +145,8 @@ retail-agent-demo/
 │   ├── globals.css              # Tailwind base + shimmer/float animations
 │   ├── page.tsx                 # / — Welcome: demo personas + webcam scan
 │   ├── shop/page.tsx            # /shop — 3-col: chat | products | cart
-│   └── checkout/page.tsx        # /checkout — payment + shipping + confirm
+│   ├── checkout/page.tsx        # /checkout — payment + shipping + confirm
+│   └── architecture/page.tsx   # /architecture — visual infrastructure diagram
 │
 ├── app/api/
 │   ├── analyze-user/route.ts    # POST: base64 JPEG → vision → UserPersona
@@ -361,12 +366,12 @@ The manifest creates:
 Namespace: retail-agent
      │
      ├── ConfigMap: retail-agent-config  (NAI endpoints + model names)
-     ├── Secret: retail-agent-secret     (NAI_API_KEY)
-     ├── Deployment: retail-agent        (1 replica, image: msvirtualguy/retail-agent-demo:v4)
-     └── Service: retail-agent           (LoadBalancer, port 80 → 3000)
+     ├── Secret:    retail-agent-secret  (NAI_API_KEY)
+     ├── Deployment: retail-agent        (1 replica · msvirtualguy/retail-agent-demo:v4)
+     └── Service:   retail-agent         (LoadBalancer · port 80 → 3000)
 ```
 
-**Resource limits**: 250m–1000m CPU, 256Mi–512Mi memory
+**Resource limits**: 250m–1000m CPU · 256Mi–512Mi memory
 
 ---
 
@@ -388,12 +393,12 @@ Namespace: retail-agent
 
 ## Key Design Decisions
 
-**No external vector database** — Product embeddings are computed once at module init and cached in memory. This keeps the deployment a single container with zero external dependencies.
+**No external vector database** — Product embeddings are computed once at module init and cached in memory. Single container, zero external dependencies.
 
 **Streaming agent loop** — `/api/chat` uses Server-Sent Events to stream tool-call status and final responses in real time. The client renders "Searching inventory..." chips before results arrive.
 
 **Persona fallback** — If vision analysis fails or returns non-JSON, the app silently falls back to `DEFAULT_PERSONA`. The shopping flow is never blocked by AI errors.
 
-**Secrets from K8s only** — `NAI_API_KEY` is injected at runtime via K8s Secret. The Dockerfile and `.dockerignore` ensure no `.env` files are ever baked into the image.
+**Secrets from K8s only** — `NAI_API_KEY` is injected at runtime via K8s Secret. The Dockerfile and `.dockerignore` ensure no `.env` files are ever baked into image layers.
 
 **Single-replica session state** — Cart state is stored in a module-level Map on the server (keyed by session ID) and mirrored in localStorage on the client. Sufficient for a demo; production would need Redis.
