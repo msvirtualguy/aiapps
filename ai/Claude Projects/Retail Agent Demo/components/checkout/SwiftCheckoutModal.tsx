@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, CheckCircle, Zap, CreditCard, Smartphone, DollarSign, ChevronRight, Camera, Tag, ScanLine } from 'lucide-react'
+import { X, CheckCircle, Zap, CreditCard, Smartphone, DollarSign, ChevronRight, Camera, Tag, ScanLine, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import type { UserPersona, Product } from '@/lib/types'
 import Image from 'next/image'
@@ -12,14 +12,13 @@ type Phase = 'camera' | 'analyzing' | 'review' | 'processing' | 'confirmed'
 type DetectedItem = { product: Product; quantity: number }
 type PaymentOption = { id: string; type: 'apple-pay' | 'venmo' | 'credit-card' | 'debit-card'; label: string; handle?: string }
 
-// Curated realistic cart scenarios
+// Curated realistic cart scenarios — product images used as the "cart photo"
 const CART_SCENARIOS = [
   {
-    photo: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=640&q=80',
     label: 'CHECKOUT LANE 3',
     itemIds: [
-      { id: 'prod-001', qty: 1 },   // Organic Strawberries — on sale
-      { id: 'dairy-004', qty: 2 },  // Free-Range Eggs — on sale
+      { id: 'prod-001',   qty: 1 }, // Organic Strawberries — on sale
+      { id: 'dairy-004',  qty: 2 }, // Free-Range Eggs — on sale
       { id: 'bakery-001', qty: 1 }, // Artisan Sourdough — on sale
       { id: 'bev-001',    qty: 1 }, // OJ — on sale
       { id: 'snack-004',  qty: 1 }, // Oreos — on sale
@@ -27,7 +26,6 @@ const CART_SCENARIOS = [
     ],
   },
   {
-    photo: 'https://images.unsplash.com/photo-1601598851547-4302969d0614?w=640&q=80',
     label: 'CHECKOUT LANE 1',
     itemIds: [
       { id: 'meat-002',   qty: 1 }, // Salmon — on sale
@@ -39,7 +37,6 @@ const CART_SCENARIOS = [
     ],
   },
   {
-    photo: 'https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=640&q=80',
     label: 'CHECKOUT LANE 5',
     itemIds: [
       { id: 'snack-003',  qty: 2 }, // Doritos — on sale
@@ -50,6 +47,16 @@ const CART_SCENARIOS = [
       { id: 'snack-002',  qty: 2 }, // Siete Chips — BOGO
     ],
   },
+]
+
+// Positions/rotations for product images in the cart composite view
+const PRODUCT_POSITIONS = [
+  { top: '6%',  left: '4%',  w: '30%', rotate: '-9deg',  zIndex: 3 },
+  { top: '4%',  left: '36%', w: '28%', rotate: '6deg',   zIndex: 2 },
+  { top: '3%',  left: '65%', w: '30%', rotate: '-5deg',  zIndex: 3 },
+  { top: '48%', left: '6%',  w: '28%', rotate: '11deg',  zIndex: 2 },
+  { top: '45%', left: '36%', w: '30%', rotate: '-7deg',  zIndex: 3 },
+  { top: '46%', left: '66%', w: '28%', rotate: '8deg',   zIndex: 2 },
 ]
 
 // Approximate bounding-box positions for detection overlays
@@ -198,10 +205,29 @@ export function SwiftCheckoutModal({ persona, onClose }: Props) {
             {/* ── PHASE 1 + 2: Camera + Analyzing ── */}
             {(phase === 'camera' || phase === 'analyzing') && (
               <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5">
-                <div className="relative rounded-xl overflow-hidden bg-slate-900 mb-4" style={{ aspectRatio: '4/3' }}>
-                  {/* Real photo of a grocery cart */}
-                  <Image src={scenario.photo} alt="In-store cart" fill className="object-cover" sizes="400px" />
-                  <div className="absolute inset-0 bg-black/35" />
+                <div className="relative rounded-xl overflow-hidden bg-slate-800 mb-4" style={{ aspectRatio: '4/3' }}>
+                  {/* Cart background — subtle wireframe */}
+                  <div className="absolute inset-0 flex items-end justify-center pb-2 opacity-[0.07]">
+                    <ShoppingCart className="w-64 h-64 text-white" />
+                  </div>
+                  {/* Product images scattered to simulate items in a physical cart */}
+                  {detectedItems.slice(0, 6).map((item, i) => {
+                    const pos = PRODUCT_POSITIONS[i % PRODUCT_POSITIONS.length]
+                    return (
+                      <div
+                        key={item.product.id}
+                        className="absolute rounded-lg overflow-hidden shadow-xl border border-white/10"
+                        style={{
+                          top: pos.top, left: pos.left, width: pos.w,
+                          aspectRatio: '1/1', transform: `rotate(${pos.rotate})`,
+                          zIndex: pos.zIndex,
+                        }}
+                      >
+                        <Image src={item.product.imageUrl} alt={item.product.name} fill className="object-cover" sizes="120px" />
+                      </div>
+                    )
+                  })}
+                  <div className="absolute inset-0 bg-black/25" />
 
                   {/* Corner brackets */}
                   {[

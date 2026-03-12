@@ -22,11 +22,22 @@ export function CartSidebar({ onSwiftCheckout }: CartSidebarProps) {
           <ShoppingBag className="w-4 h-4 text-slate-600" />
           <span className="text-sm font-bold text-slate-900">Cart</span>
         </div>
-        {totalItems > 0 && (
-          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-700">
-            {totalItems}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {totalItems > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-700">
+              {totalItems}
+            </span>
+          )}
+          {onSwiftCheckout && (
+            <button
+              onClick={onSwiftCheckout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors"
+            >
+              <Zap className="w-3 h-3" />
+              Swift Checkout
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 min-h-0 bg-slate-50/50">
@@ -51,15 +62,6 @@ export function CartSidebar({ onSwiftCheckout }: CartSidebarProps) {
             <span className="text-xs font-semibold text-slate-500">Subtotal</span>
             <span className="text-lg font-bold text-slate-900">${subtotal.toFixed(2)}</span>
           </div>
-          {onSwiftCheckout && (
-            <button
-              onClick={onSwiftCheckout}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-colors"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              Swift Checkout
-            </button>
-          )}
           <NeonButton variant="green" size="md"
             className="w-full flex items-center justify-center gap-2"
             onClick={() => router.push('/checkout')}>
