@@ -10,9 +10,30 @@
     "aisle": "P1",
     "description": "Plump, sweet organic strawberries picked at peak ripeness. No pesticides, no artificial anything. Perfect for snacking, smoothies, or topping your morning yogurt.",
     "imageUrl": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&auto=format",
-    "tags": ["strawberries", "fruit", "organic", "fresh", "berries", "produce"],
+    "tags": [
+      "strawberries",
+      "fruit",
+      "organic",
+      "fresh",
+      "berries",
+      "produce"
+    ],
     "rating": 4.8,
-    "reviewCount": 2341
+    "reviewCount": 2341,
+    "nutrition": {
+      "servingSize": "1 cup (152g)",
+      "calories": 49,
+      "fat": 0.5,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 1,
+      "carbohydrates": 12,
+      "sugar": 7,
+      "fiber": 3,
+      "protein": 1,
+      "vitaminC": "98% DV",
+      "potassium": "220mg"
+    }
   },
   {
     "id": "prod-002",
@@ -25,9 +46,29 @@
     "aisle": "P1",
     "description": "Ready-to-eat Hass avocados with rich, creamy flesh and nutty flavor. Perfect ripeness for guacamole, toast, or salads. Packed with healthy fats and potassium.",
     "imageUrl": "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&auto=format",
-    "tags": ["avocado", "fruit", "healthy", "produce", "hass"],
+    "tags": [
+      "avocado",
+      "fruit",
+      "healthy",
+      "produce",
+      "hass"
+    ],
     "rating": 4.6,
-    "reviewCount": 1892
+    "reviewCount": 1892,
+    "nutrition": {
+      "servingSize": "1/3 medium (50g)",
+      "calories": 80,
+      "fat": 7,
+      "saturatedFat": 1,
+      "cholesterol": 0,
+      "sodium": 5,
+      "carbohydrates": 4,
+      "sugar": 0,
+      "fiber": 3,
+      "protein": 1,
+      "vitaminC": "8% DV",
+      "potassium": "250mg"
+    }
   },
   {
     "id": "prod-003",
@@ -40,9 +81,30 @@
     "aisle": "P2",
     "description": "Triple-washed and ready-to-eat baby spinach leaves. Mild flavor great for salads, smoothies, or sautéing. Rich in iron, calcium, and vitamins A & C.",
     "imageUrl": "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&auto=format",
-    "tags": ["spinach", "salad", "greens", "vegetables", "organic", "produce"],
+    "tags": [
+      "spinach",
+      "salad",
+      "greens",
+      "vegetables",
+      "organic",
+      "produce"
+    ],
     "rating": 4.5,
-    "reviewCount": 1034
+    "reviewCount": 1034,
+    "nutrition": {
+      "servingSize": "3 oz (85g)",
+      "calories": 20,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 65,
+      "carbohydrates": 3,
+      "sugar": 0,
+      "fiber": 1,
+      "protein": 2,
+      "vitaminA": "56% DV",
+      "ironDV": "6% DV"
+    }
   },
   {
     "id": "prod-004",
@@ -55,9 +117,29 @@
     "aisle": "P1",
     "description": "Sweet, seedless navel oranges bursting with vitamin C. Easy-peel thick skin makes them perfect for snacking on the go. Juicy and naturally sweet.",
     "imageUrl": "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&auto=format",
-    "tags": ["oranges", "citrus", "fruit", "vitamin c", "produce"],
+    "tags": [
+      "oranges",
+      "citrus",
+      "fruit",
+      "vitamin c",
+      "produce"
+    ],
     "rating": 4.7,
-    "reviewCount": 876
+    "reviewCount": 876,
+    "nutrition": {
+      "servingSize": "1 medium (131g)",
+      "calories": 62,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 15,
+      "sugar": 12,
+      "fiber": 3,
+      "protein": 1,
+      "vitaminC": "92% DV",
+      "folate": "10% DV"
+    }
   },
   {
     "id": "prod-005",
@@ -70,9 +152,29 @@
     "aisle": "P2",
     "description": "Firm, meaty Roma tomatoes with low moisture and concentrated flavor. Ideal for cooking sauces, roasting, and fresh slicing. Locally sourced when in season.",
     "imageUrl": "https://images.unsplash.com/photo-1546470427-e26264be0b0d?w=400&auto=format",
-    "tags": ["tomatoes", "roma", "vegetables", "cooking", "produce"],
+    "tags": [
+      "tomatoes",
+      "roma",
+      "vegetables",
+      "cooking",
+      "produce"
+    ],
     "rating": 4.4,
-    "reviewCount": 654
+    "reviewCount": 654,
+    "nutrition": {
+      "servingSize": "1 medium (123g)",
+      "calories": 22,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 6,
+      "carbohydrates": 5,
+      "sugar": 3,
+      "fiber": 1,
+      "protein": 1,
+      "vitaminC": "28% DV",
+      "vitaminA": "20% DV"
+    }
   },
   {
     "id": "dairy-001",
@@ -85,9 +187,28 @@
     "aisle": "D1",
     "description": "Certified USDA Organic whole milk from pasture-raised cows. No artificial hormones or antibiotics. Creamy, rich flavor that's great for drinking, cooking, or baking.",
     "imageUrl": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&auto=format",
-    "tags": ["milk", "dairy", "organic", "whole milk"],
+    "tags": [
+      "milk",
+      "dairy",
+      "organic",
+      "whole milk"
+    ],
     "rating": 4.7,
-    "reviewCount": 3102
+    "reviewCount": 3102,
+    "nutrition": {
+      "servingSize": "1 cup (240ml)",
+      "calories": 150,
+      "fat": 8,
+      "saturatedFat": 5,
+      "cholesterol": 35,
+      "sodium": 125,
+      "carbohydrates": 12,
+      "sugar": 11,
+      "fiber": 0,
+      "protein": 8,
+      "calcium": "30% DV",
+      "vitaminD": "15% DV"
+    }
   },
   {
     "id": "dairy-002",
@@ -100,9 +221,29 @@
     "aisle": "D2",
     "description": "8 single-serve cups in assorted flavors: strawberry, blueberry, peach, and mixed berry. 12g protein per serving. Made with only natural ingredients, no artificial flavors.",
     "imageUrl": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&auto=format",
-    "tags": ["yogurt", "greek yogurt", "chobani", "dairy", "protein"],
+    "tags": [
+      "yogurt",
+      "greek yogurt",
+      "chobani",
+      "dairy",
+      "protein"
+    ],
     "rating": 4.8,
-    "reviewCount": 5621
+    "reviewCount": 5621,
+    "nutrition": {
+      "servingSize": "1 container (150g)",
+      "calories": 130,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 10,
+      "sodium": 70,
+      "carbohydrates": 17,
+      "sugar": 13,
+      "fiber": 0,
+      "protein": 12,
+      "calcium": "15% DV",
+      "probiotics": "Live & Active Cultures"
+    }
   },
   {
     "id": "dairy-003",
@@ -115,9 +256,29 @@
     "aisle": "D3",
     "description": "Award-winning sharp cheddar aged for a bold, complex flavor. Made from milk of cows never treated with rBST. Perfect for snacking, melting, or cheese boards.",
     "imageUrl": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400&auto=format",
-    "tags": ["cheese", "cheddar", "tillamook", "dairy", "sharp cheddar"],
+    "tags": [
+      "cheese",
+      "cheddar",
+      "tillamook",
+      "dairy",
+      "sharp cheddar"
+    ],
     "rating": 4.9,
-    "reviewCount": 4213
+    "reviewCount": 4213,
+    "nutrition": {
+      "servingSize": "1 oz (28g)",
+      "calories": 110,
+      "fat": 9,
+      "saturatedFat": 6,
+      "cholesterol": 30,
+      "sodium": 180,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 7,
+      "calcium": "20% DV",
+      "vitaminA": "6% DV"
+    }
   },
   {
     "id": "dairy-004",
@@ -130,9 +291,29 @@
     "aisle": "D1",
     "description": "Grade A large eggs from hens raised on pasture with outdoor access. Rich golden yolks and firm whites. Certified humane. Freshness guaranteed.",
     "imageUrl": "https://images.unsplash.com/photo-1506976785307-8732e854ad03?w=400&auto=format",
-    "tags": ["eggs", "free range", "dairy", "breakfast", "protein"],
+    "tags": [
+      "eggs",
+      "free range",
+      "dairy",
+      "breakfast",
+      "protein"
+    ],
     "rating": 4.7,
-    "reviewCount": 7821
+    "reviewCount": 7821,
+    "nutrition": {
+      "servingSize": "1 large egg (50g)",
+      "calories": 70,
+      "fat": 5,
+      "saturatedFat": 1.5,
+      "cholesterol": 185,
+      "sodium": 70,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 6,
+      "vitaminD": "6% DV",
+      "iron": "4% DV"
+    }
   },
   {
     "id": "meat-001",
@@ -145,9 +326,30 @@
     "aisle": "M1",
     "description": "Well-marbled USDA Choice ribeye cut fresh daily. Exceptional tenderness and rich beefy flavor. Ideal for grilling, pan-searing, or broiling. Average 1–1.2 lb per pack.",
     "imageUrl": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&auto=format",
-    "tags": ["steak", "ribeye", "beef", "meat", "grilling", "usda choice"],
+    "tags": [
+      "steak",
+      "ribeye",
+      "beef",
+      "meat",
+      "grilling",
+      "usda choice"
+    ],
     "rating": 4.8,
-    "reviewCount": 1243
+    "reviewCount": 1243,
+    "nutrition": {
+      "servingSize": "4 oz (113g)",
+      "calories": 300,
+      "fat": 22,
+      "saturatedFat": 9,
+      "cholesterol": 90,
+      "sodium": 55,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 25,
+      "iron": "15% DV",
+      "zinc": "40% DV"
+    }
   },
   {
     "id": "meat-002",
@@ -160,9 +362,30 @@
     "aisle": "M2",
     "description": "Fresh-cut Atlantic salmon fillet with skin on. High in Omega-3 fatty acids and protein. Mild, buttery flavor that pairs well with lemon, herbs, or soy glaze.",
     "imageUrl": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&auto=format",
-    "tags": ["salmon", "fish", "seafood", "omega-3", "healthy", "fresh"],
+    "tags": [
+      "salmon",
+      "fish",
+      "seafood",
+      "omega-3",
+      "healthy",
+      "fresh"
+    ],
     "rating": 4.6,
-    "reviewCount": 891
+    "reviewCount": 891,
+    "nutrition": {
+      "servingSize": "4 oz (113g)",
+      "calories": 160,
+      "fat": 7,
+      "saturatedFat": 1.5,
+      "cholesterol": 63,
+      "sodium": 50,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 22,
+      "omega3": "1.5g",
+      "vitaminD": "15% DV"
+    }
   },
   {
     "id": "meat-003",
@@ -175,9 +398,30 @@
     "aisle": "M1",
     "description": "Certified organic, air-chilled boneless chicken breast. No antibiotics, ever. Lean protein at its best — great for grilling, baking, stir-fry, or meal prep.",
     "imageUrl": "https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=400&auto=format",
-    "tags": ["chicken", "chicken breast", "organic", "poultry", "protein", "meat"],
+    "tags": [
+      "chicken",
+      "chicken breast",
+      "organic",
+      "poultry",
+      "protein",
+      "meat"
+    ],
     "rating": 4.5,
-    "reviewCount": 2134
+    "reviewCount": 2134,
+    "nutrition": {
+      "servingSize": "4 oz (113g)",
+      "calories": 130,
+      "fat": 2.5,
+      "saturatedFat": 0.5,
+      "cholesterol": 75,
+      "sodium": 75,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 27,
+      "niacin": "60% DV",
+      "phosphorus": "25% DV"
+    }
   },
   {
     "id": "meat-004",
@@ -190,9 +434,29 @@
     "aisle": "M2",
     "description": "Wild-caught Gulf shrimp, peeled, deveined, and flash-frozen for freshness. 21–25 count per pound. Naturally sweet with a firm texture. No preservatives added.",
     "imageUrl": "https://images.unsplash.com/photo-1559742811-822873691df8?w=400&auto=format",
-    "tags": ["shrimp", "seafood", "wild caught", "gulf shrimp", "frozen"],
+    "tags": [
+      "shrimp",
+      "seafood",
+      "wild caught",
+      "gulf shrimp",
+      "frozen"
+    ],
     "rating": 4.7,
-    "reviewCount": 1567
+    "reviewCount": 1567,
+    "nutrition": {
+      "servingSize": "3 oz (85g)",
+      "calories": 84,
+      "fat": 0.9,
+      "saturatedFat": 0.2,
+      "cholesterol": 166,
+      "sodium": 805,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 18,
+      "iodine": "15% DV",
+      "selenium": "50% DV"
+    }
   },
   {
     "id": "bakery-001",
@@ -205,9 +469,29 @@
     "aisle": "BK1",
     "description": "Stone-oven baked sourdough with a crackling crust and chewy interior. Made with live starter culture and no preservatives. Tangy, complex flavor. Baked fresh daily.",
     "imageUrl": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format",
-    "tags": ["sourdough", "bread", "artisan", "bakery", "fresh baked"],
+    "tags": [
+      "sourdough",
+      "bread",
+      "artisan",
+      "bakery",
+      "fresh baked"
+    ],
     "rating": 4.9,
-    "reviewCount": 3421
+    "reviewCount": 3421,
+    "nutrition": {
+      "servingSize": "1 slice (57g)",
+      "calories": 150,
+      "fat": 1,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 310,
+      "carbohydrates": 30,
+      "sugar": 0,
+      "fiber": 1,
+      "protein": 5,
+      "iron": "10% DV",
+      "thiamin": "15% DV"
+    }
   },
   {
     "id": "bakery-002",
@@ -220,9 +504,30 @@
     "aisle": "BK2",
     "description": "Flaky, buttery French-style croissants baked fresh every morning. 72-hour laminated dough with European-style butter. Perfect with jam, ham, or just on their own.",
     "imageUrl": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format",
-    "tags": ["croissants", "pastry", "bakery", "french", "breakfast", "butter"],
+    "tags": [
+      "croissants",
+      "pastry",
+      "bakery",
+      "french",
+      "breakfast",
+      "butter"
+    ],
     "rating": 4.8,
-    "reviewCount": 2891
+    "reviewCount": 2891,
+    "nutrition": {
+      "servingSize": "1 croissant (57g)",
+      "calories": 231,
+      "fat": 12,
+      "saturatedFat": 7,
+      "cholesterol": 32,
+      "sodium": 424,
+      "carbohydrates": 26,
+      "sugar": 6,
+      "fiber": 1,
+      "protein": 5,
+      "calcium": "4% DV",
+      "iron": "8% DV"
+    }
   },
   {
     "id": "bakery-003",
@@ -235,9 +540,29 @@
     "aisle": "BK1",
     "description": "New York-style everything bagels loaded with sesame seeds, poppy seeds, onion, garlic, and salt. Dense, chewy interior with a golden crust. Kettle-boiled before baking.",
     "imageUrl": "https://images.unsplash.com/photo-1585325701165-c7d07a2a8c5a?w=400&auto=format",
-    "tags": ["bagels", "everything bagel", "bread", "bakery", "breakfast"],
+    "tags": [
+      "bagels",
+      "everything bagel",
+      "bread",
+      "bakery",
+      "breakfast"
+    ],
     "rating": 4.7,
-    "reviewCount": 4102
+    "reviewCount": 4102,
+    "nutrition": {
+      "servingSize": "1 bagel (98g)",
+      "calories": 270,
+      "fat": 1.5,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 430,
+      "carbohydrates": 54,
+      "sugar": 5,
+      "fiber": 2,
+      "protein": 10,
+      "iron": "15% DV",
+      "thiamin": "20% DV"
+    }
   },
   {
     "id": "frozen-001",
@@ -250,9 +575,30 @@
     "aisle": "F1",
     "description": "Certified organic burritos in cheddar & bean, breakfast, and black bean varieties. Made with non-GMO ingredients and wrapped in whole wheat tortillas. Quick microwave meal.",
     "imageUrl": "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&auto=format",
-    "tags": ["burritos", "frozen", "organic", "amy's", "vegetarian", "quick meal"],
+    "tags": [
+      "burritos",
+      "frozen",
+      "organic",
+      "amy's",
+      "vegetarian",
+      "quick meal"
+    ],
     "rating": 4.5,
-    "reviewCount": 1892
+    "reviewCount": 1892,
+    "nutrition": {
+      "servingSize": "1 burrito (170g)",
+      "calories": 280,
+      "fat": 8,
+      "saturatedFat": 2.5,
+      "cholesterol": 10,
+      "sodium": 580,
+      "carbohydrates": 45,
+      "sugar": 2,
+      "fiber": 4,
+      "protein": 8,
+      "vitaminA": "6% DV",
+      "calcium": "15% DV"
+    }
   },
   {
     "id": "frozen-002",
@@ -265,9 +611,29 @@
     "aisle": "F2",
     "description": "Premium ice cream made with only 5 simple ingredients. Available in vanilla, chocolate, strawberry, coffee, and dulce de leche. No artificial flavors or colors.",
     "imageUrl": "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&auto=format",
-    "tags": ["ice cream", "haagen dazs", "frozen dessert", "dessert", "premium"],
+    "tags": [
+      "ice cream",
+      "haagen dazs",
+      "frozen dessert",
+      "dessert",
+      "premium"
+    ],
     "rating": 4.9,
-    "reviewCount": 8932
+    "reviewCount": 8932,
+    "nutrition": {
+      "servingSize": "1/2 cup (102g)",
+      "calories": 270,
+      "fat": 17,
+      "saturatedFat": 11,
+      "cholesterol": 95,
+      "sodium": 85,
+      "carbohydrates": 23,
+      "sugar": 20,
+      "fiber": 0,
+      "protein": 5,
+      "calcium": "15% DV",
+      "vitaminA": "8% DV"
+    }
   },
   {
     "id": "frozen-003",
@@ -280,9 +646,30 @@
     "aisle": "F1",
     "description": "Flash-frozen vegetables that steam right in the bag. Available in broccoli, mixed vegetables, corn, and green beans. No sauce added — just pure vegetables. Ready in 5 minutes.",
     "imageUrl": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&auto=format",
-    "tags": ["frozen vegetables", "birds eye", "steamfresh", "broccoli", "healthy", "quick"],
+    "tags": [
+      "frozen vegetables",
+      "birds eye",
+      "steamfresh",
+      "broccoli",
+      "healthy",
+      "quick"
+    ],
     "rating": 4.4,
-    "reviewCount": 2341
+    "reviewCount": 2341,
+    "nutrition": {
+      "servingSize": "3/4 cup (85g)",
+      "calories": 30,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 20,
+      "carbohydrates": 6,
+      "sugar": 2,
+      "fiber": 2,
+      "protein": 2,
+      "vitaminC": "60% DV",
+      "vitaminK": "100% DV"
+    }
   },
   {
     "id": "pantry-001",
@@ -295,9 +682,29 @@
     "aisle": "G1",
     "description": "100% California extra virgin olive oil. Harvested and bottled within weeks for maximum freshness. Fresh, fruity flavor with a mild peppery finish. Non-GMO and USDA certified.",
     "imageUrl": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format",
-    "tags": ["olive oil", "california olive ranch", "cooking oil", "extra virgin", "pantry"],
+    "tags": [
+      "olive oil",
+      "california olive ranch",
+      "cooking oil",
+      "extra virgin",
+      "pantry"
+    ],
     "rating": 4.8,
-    "reviewCount": 5621
+    "reviewCount": 5621,
+    "nutrition": {
+      "servingSize": "1 tbsp (14g)",
+      "calories": 120,
+      "fat": 14,
+      "saturatedFat": 2,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 0,
+      "vitaminE": "10% DV",
+      "vitaminK": "8% DV"
+    }
   },
   {
     "id": "pantry-002",
@@ -310,9 +717,30 @@
     "aisle": "G2",
     "description": "Three 16oz boxes of Barilla pasta: penne, spaghetti, and rigatoni. Made in Italy with 100% durum wheat semolina. Al dente texture. Non-GMO verified.",
     "imageUrl": "https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=400&auto=format",
-    "tags": ["pasta", "barilla", "spaghetti", "penne", "italian", "pantry"],
+    "tags": [
+      "pasta",
+      "barilla",
+      "spaghetti",
+      "penne",
+      "italian",
+      "pantry"
+    ],
     "rating": 4.7,
-    "reviewCount": 4892
+    "reviewCount": 4892,
+    "nutrition": {
+      "servingSize": "2 oz dry (56g)",
+      "calories": 200,
+      "fat": 1,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 42,
+      "sugar": 2,
+      "fiber": 2,
+      "protein": 7,
+      "iron": "10% DV",
+      "thiamin": "25% DV"
+    }
   },
   {
     "id": "pantry-003",
@@ -325,9 +753,30 @@
     "aisle": "G3",
     "description": "100% whole grain oats for a hearty, filling breakfast. Low glycemic index with 4g of fiber per serving. Versatile for oatmeal, overnight oats, granola, or baking.",
     "imageUrl": "https://images.unsplash.com/photo-1495214783159-3503fd1b572d?w=400&auto=format",
-    "tags": ["oats", "quaker", "oatmeal", "whole grain", "breakfast", "pantry"],
+    "tags": [
+      "oats",
+      "quaker",
+      "oatmeal",
+      "whole grain",
+      "breakfast",
+      "pantry"
+    ],
     "rating": 4.6,
-    "reviewCount": 7821
+    "reviewCount": 7821,
+    "nutrition": {
+      "servingSize": "1/2 cup dry (40g)",
+      "calories": 150,
+      "fat": 3,
+      "saturatedFat": 0.5,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 27,
+      "sugar": 1,
+      "fiber": 4,
+      "protein": 5,
+      "iron": "10% DV",
+      "magnesium": "10% DV"
+    }
   },
   {
     "id": "pantry-004",
@@ -340,9 +789,30 @@
     "aisle": "G2",
     "description": "Slow-simmered Southern Italian marinara with San Marzano tomatoes, olive oil, and fresh basil. No added sugar, low in carbs. The #1 pasta sauce in the US.",
     "imageUrl": "https://images.unsplash.com/photo-1600803907087-f56d462fd26b?w=400&auto=format",
-    "tags": ["marinara", "pasta sauce", "rao's", "italian", "tomato sauce", "pantry"],
+    "tags": [
+      "marinara",
+      "pasta sauce",
+      "rao's",
+      "italian",
+      "tomato sauce",
+      "pantry"
+    ],
     "rating": 4.9,
-    "reviewCount": 12431
+    "reviewCount": 12431,
+    "nutrition": {
+      "servingSize": "1/2 cup (125g)",
+      "calories": 80,
+      "fat": 3.5,
+      "saturatedFat": 0.5,
+      "cholesterol": 0,
+      "sodium": 280,
+      "carbohydrates": 10,
+      "sugar": 6,
+      "fiber": 2,
+      "protein": 2,
+      "vitaminA": "15% DV",
+      "vitaminC": "15% DV"
+    }
   },
   {
     "id": "bev-001",
@@ -355,9 +825,30 @@
     "aisle": "BV1",
     "description": "100% pure squeezed orange juice with no added sugars or preservatives. Pasteurized for safety. Available in original, no pulp, and some pulp varieties. High in vitamin C.",
     "imageUrl": "https://images.unsplash.com/photo-1600718374621-8de0db2b5567?w=400&auto=format",
-    "tags": ["orange juice", "tropicana", "juice", "breakfast", "vitamin c", "beverage"],
+    "tags": [
+      "orange juice",
+      "tropicana",
+      "juice",
+      "breakfast",
+      "vitamin c",
+      "beverage"
+    ],
     "rating": 4.6,
-    "reviewCount": 3421
+    "reviewCount": 3421,
+    "nutrition": {
+      "servingSize": "8 fl oz (240ml)",
+      "calories": 110,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 26,
+      "sugar": 22,
+      "fiber": 0,
+      "protein": 2,
+      "vitaminC": "120% DV",
+      "potassium": "450mg"
+    }
   },
   {
     "id": "bev-002",
@@ -370,9 +861,28 @@
     "aisle": "BV2",
     "description": "Natural mineral sparkling water from the Italian Alps since 1899. Fine, persistent bubbles with a crisp, clean finish. Zero calories, zero sweeteners. Great for sipping or pairing with meals.",
     "imageUrl": "https://images.unsplash.com/photo-1560023907-5f339617ea30?w=400&auto=format",
-    "tags": ["sparkling water", "san pellegrino", "mineral water", "italian", "beverage"],
+    "tags": [
+      "sparkling water",
+      "san pellegrino",
+      "mineral water",
+      "italian",
+      "beverage"
+    ],
     "rating": 4.8,
-    "reviewCount": 5213
+    "reviewCount": 5213,
+    "nutrition": {
+      "servingSize": "11.15 fl oz (330ml)",
+      "calories": 0,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 10,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 0,
+      "minerals": "Calcium, Magnesium, Sulfates"
+    }
   },
   {
     "id": "bev-003",
@@ -385,9 +895,30 @@
     "aisle": "BV3",
     "description": "40 individually sealed tea bags across 6 green tea varieties: Classic, Mint, Lemon, Pomegranate, Decaf, and Constant Comment. Rich in antioxidants. Gluten-free.",
     "imageUrl": "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&auto=format",
-    "tags": ["tea", "green tea", "bigelow", "hot beverage", "antioxidants", "beverage"],
+    "tags": [
+      "tea",
+      "green tea",
+      "bigelow",
+      "hot beverage",
+      "antioxidants",
+      "beverage"
+    ],
     "rating": 4.5,
-    "reviewCount": 2134
+    "reviewCount": 2134,
+    "nutrition": {
+      "servingSize": "1 tea bag / 8 fl oz",
+      "calories": 0,
+      "fat": 0,
+      "saturatedFat": 0,
+      "cholesterol": 0,
+      "sodium": 0,
+      "carbohydrates": 0,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 0,
+      "antioxidants": "EGCG (catechins)",
+      "caffeine": "25mg"
+    }
   },
   {
     "id": "snack-001",
@@ -400,9 +931,30 @@
     "aisle": "SN1",
     "description": "Whole food protein bars with 12g protein per bar. Made with egg whites, dates, and nuts — that's it. No B.S. flavors include chocolate sea salt, peanut butter, blueberry, and more.",
     "imageUrl": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&auto=format",
-    "tags": ["protein bar", "rxbar", "snack", "healthy", "whole food", "gluten free"],
+    "tags": [
+      "protein bar",
+      "rxbar",
+      "snack",
+      "healthy",
+      "whole food",
+      "gluten free"
+    ],
     "rating": 4.7,
-    "reviewCount": 4213
+    "reviewCount": 4213,
+    "nutrition": {
+      "servingSize": "1 bar (52g)",
+      "calories": 210,
+      "fat": 9,
+      "saturatedFat": 3,
+      "cholesterol": 0,
+      "sodium": 210,
+      "carbohydrates": 24,
+      "sugar": 13,
+      "fiber": 3,
+      "protein": 12,
+      "potassium": "320mg",
+      "iron": "10% DV"
+    }
   },
   {
     "id": "snack-002",
@@ -415,9 +967,30 @@
     "aisle": "SN2",
     "description": "Light and crispy grain-free chips made with cassava and coconut flour. Perfect with salsa, guac, or solo. Paleo, vegan, gluten-free. Sea salt, lime, and nacho flavors available.",
     "imageUrl": "https://images.unsplash.com/photo-1546069901-5ec6a79120b0?w=400&auto=format",
-    "tags": ["chips", "siete", "grain free", "snack", "tortilla chips", "paleo"],
+    "tags": [
+      "chips",
+      "siete",
+      "grain free",
+      "snack",
+      "tortilla chips",
+      "paleo"
+    ],
     "rating": 4.6,
-    "reviewCount": 2891
+    "reviewCount": 2891,
+    "nutrition": {
+      "servingSize": "1 oz (28g, ~11 chips)",
+      "calories": 130,
+      "fat": 6,
+      "saturatedFat": 0.5,
+      "cholesterol": 0,
+      "sodium": 100,
+      "carbohydrates": 18,
+      "sugar": 0,
+      "fiber": 1,
+      "protein": 1,
+      "calcium": "2% DV",
+      "iron": "2% DV"
+    }
   },
   {
     "id": "deli-001",
@@ -430,9 +1003,30 @@
     "aisle": "DL1",
     "description": "Sliced to order at the deli counter. All-natural roasted turkey breast with no fillers, extenders, or artificial colors. 97% fat-free. Gluten-free. Great for sandwiches.",
     "imageUrl": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format",
-    "tags": ["turkey", "deli meat", "boar's head", "sandwich", "lunch meat", "deli"],
+    "tags": [
+      "turkey",
+      "deli meat",
+      "boar's head",
+      "sandwich",
+      "lunch meat",
+      "deli"
+    ],
     "rating": 4.8,
-    "reviewCount": 1567
+    "reviewCount": 1567,
+    "nutrition": {
+      "servingSize": "2 oz (56g)",
+      "calories": 60,
+      "fat": 1,
+      "saturatedFat": 0,
+      "cholesterol": 30,
+      "sodium": 430,
+      "carbohydrates": 2,
+      "sugar": 0,
+      "fiber": 0,
+      "protein": 12,
+      "iron": "6% DV",
+      "zinc": "10% DV"
+    }
   },
   {
     "id": "deli-002",
@@ -445,8 +1039,29 @@
     "aisle": "DL2",
     "description": "Made fresh in-store daily with ripe Hass avocados, lime juice, cilantro, jalapeño, and sea salt. No preservatives or artificial ingredients. Best within 2 days of purchase.",
     "imageUrl": "https://images.unsplash.com/photo-1541519227354-08fa5d50c820?w=400&auto=format",
-    "tags": ["guacamole", "avocado", "deli", "fresh", "snack", "dip"],
+    "tags": [
+      "guacamole",
+      "avocado",
+      "deli",
+      "fresh",
+      "snack",
+      "dip"
+    ],
     "rating": 4.9,
-    "reviewCount": 3102
+    "reviewCount": 3102,
+    "nutrition": {
+      "servingSize": "2 tbsp (30g)",
+      "calories": 50,
+      "fat": 4.5,
+      "saturatedFat": 0.5,
+      "cholesterol": 0,
+      "sodium": 55,
+      "carbohydrates": 3,
+      "sugar": 0,
+      "fiber": 1,
+      "protein": 1,
+      "potassium": "175mg",
+      "vitaminC": "4% DV"
+    }
   }
 ]

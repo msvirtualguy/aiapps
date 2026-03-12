@@ -9,8 +9,12 @@ interface PersonaCardProps {
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
-  'card': 'Card',
+  'credit-card': 'Credit Card',
+  'debit-card': 'Debit Card',
   'apple-pay': 'Apple Pay',
+  'venmo': 'Venmo',
+  // legacy fallbacks
+  'card': 'Card',
   'google-pay': 'Google Pay',
   'buy-now-pay-later': 'Buy Now Pay Later',
 }
@@ -42,12 +46,12 @@ export function PersonaCard({ persona, loading }: PersonaCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-brand-500" />
-          <span className="text-xs font-bold text-brand-600 uppercase tracking-wide">Your Vibe</span>
+          <span className="text-sm font-bold text-slate-900">{persona.name ?? 'Guest'}</span>
         </div>
         <span className="text-[10px] text-slate-400">{persona.ageGroup}</span>
       </div>
 
-      <p className="text-sm font-bold text-slate-900 capitalize">{persona.vibe}</p>
+      <p className="text-xs text-slate-500 capitalize">{persona.vibe}</p>
 
       <div className="flex flex-wrap gap-1.5">
         {persona.style.map(s => (
@@ -60,7 +64,7 @@ export function PersonaCard({ persona, loading }: PersonaCardProps) {
       <div className="flex gap-4 text-slate-500">
         <div className="flex items-center gap-1.5">
           <CreditCard className="w-3.5 h-3.5" />
-          <span className="text-xs">{PAYMENT_LABELS[persona.preferredPayment] ?? persona.preferredPayment}</span>
+          <span className="text-xs">{persona.paymentDetails?.label ?? PAYMENT_LABELS[persona.preferredPayment] ?? persona.preferredPayment}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Truck className="w-3.5 h-3.5" />

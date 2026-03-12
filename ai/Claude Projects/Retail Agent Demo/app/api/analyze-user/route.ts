@@ -3,26 +3,32 @@ import { naiClient, MODELS } from '@/lib/nai-client'
 import type { UserPersona } from '@/lib/types'
 
 const DEFAULT_PERSONA: UserPersona = {
+  name: 'Guest Shopper',
   ageGroup: 'Young Adult (18-25)',
-  style: ['casual', 'modern', 'tech-forward'],
-  interests: ['technology', 'fitness', 'music'],
+  style: ['casual', 'modern', 'health-conscious'],
+  interests: ['healthy eating', 'fitness', 'cooking', 'fresh produce'],
   preferredPayment: 'apple-pay',
+  paymentDetails: {
+    type: 'apple-pay',
+    label: 'Apple Pay',
+  },
   shippingPreference: 'express',
   personalizedDeals: [
     {
-      title: 'Tech Bundle',
-      description: '20% off all Electronics today',
+      title: 'Fresh Picks',
+      description: '20% off all Produce today',
       discount: '20% OFF',
-      category: 'Electronics',
+      category: 'Produce',
     },
     {
-      title: 'Fresh Fits',
-      description: 'Buy 2 clothing items, get 1 free',
-      discount: 'B2G1',
-      category: 'Clothing',
+      title: 'Protein Pack',
+      description: 'BOGO on Meat & Seafood',
+      discount: 'BOGO',
+      category: 'Meat & Seafood',
     },
   ],
-  vibe: 'tech-savvy trendsetter',
+  vibe: 'health-savvy grocery shopper',
+  pastOrders: [],
 }
 
 export async function POST(request: Request) {
@@ -35,20 +41,23 @@ export async function POST(request: Request) {
 
     const prompt = `Analyze this person's photo and return a JSON object with exactly these fields:
 {
+  "name": "Guest Shopper",
   "ageGroup": "string (e.g. 'Teen (13-17)', 'Young Adult (18-25)', 'Millennial (26-40)', 'Gen X (41-55)', 'Boomer (55+)')",
-  "style": ["array of 3 style keywords like casual, streetwear, preppy, athletic, professional, bohemian, minimalist, luxury"],
-  "interests": ["array of 3-5 likely interests based on appearance like fitness, gaming, music, fashion, outdoor, cooking, art, sports, travel"],
-  "preferredPayment": "one of: card, apple-pay, google-pay, buy-now-pay-later",
+  "style": ["array of 3 style keywords like casual, athletic, professional, bohemian, minimalist"],
+  "interests": ["array of 3-5 likely grocery/food interests like healthy eating, meal prep, baking, cooking, organic food, fitness"],
+  "preferredPayment": "one of: credit-card, debit-card, apple-pay, venmo",
+  "paymentDetails": { "type": "same as preferredPayment", "label": "e.g. 'Apple Pay' or 'Visa ending in 4242'" },
   "shippingPreference": "one of: standard, express, overnight",
   "personalizedDeals": [
     {
       "title": "deal name",
-      "description": "short description",
+      "description": "short description related to groceries",
       "discount": "e.g. '20% OFF' or 'BOGO'",
-      "category": "product category"
+      "category": "one of: Produce, Dairy & Eggs, Meat & Seafood, Bakery & Bread, Frozen Foods, Pantry & Dry Goods, Beverages, Snacks, Deli"
     }
   ],
-  "vibe": "a short fun 2-4 word description of their vibe, e.g. 'sporty minimalist icon'"
+  "vibe": "a short fun 2-4 word grocery shopper description",
+  "pastOrders": []
 }
 
 Return ONLY valid JSON, no markdown, no explanation.`

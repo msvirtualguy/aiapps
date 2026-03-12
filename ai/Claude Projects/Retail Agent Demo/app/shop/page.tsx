@@ -7,11 +7,12 @@ import { ProductGrid } from '@/components/products/ProductGrid'
 import { CartSidebar } from '@/components/cart/CartSidebar'
 import { PersonaCard } from '@/components/camera/PersonaCard'
 import { GroceryListScanner } from '@/components/scanner/GroceryListScanner'
+import { PastOrdersModal } from '@/components/orders/PastOrdersModal'
 import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
 import allProducts from '@/data/products.json'
-import { ShoppingBag, User, ChevronRight, ScanLine } from 'lucide-react'
+import { ShoppingBag, User, ChevronRight, ScanLine, Clock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
@@ -22,6 +23,7 @@ export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>(allProducts as Product[])
   const [showCart, setShowCart] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showOrders, setShowOrders] = useState(false)
 
   const handleCartUpdate = (items: CartItem[]) => {
     if (items.length > 0) setShowCart(true)
@@ -51,8 +53,15 @@ export default function ShopPage() {
             {persona && (
               <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 border border-brand-100">
                 <User className="w-3 h-3 text-brand-500" />
-                <span className="text-xs font-semibold text-brand-700 capitalize">{persona.vibe}</span>
+                <span className="text-xs font-semibold text-brand-700">{persona.name}</span>
               </div>
+            )}
+            {persona && persona.pastOrders.length > 0 && (
+              <button onClick={() => setShowOrders(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-brand-200 hover:bg-brand-50 transition-all">
+                <Clock className="w-4 h-4 text-slate-500" />
+                <span className="text-xs font-semibold text-slate-700 hidden sm:inline">Past Orders</span>
+              </button>
             )}
             <button onClick={() => setShowScanner(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 hover:border-emerald-300 hover:bg-emerald-100 transition-all">
@@ -124,6 +133,13 @@ export default function ShopPage() {
       {/* Grocery list scanner modal */}
       <AnimatePresence>
         {showScanner && <GroceryListScanner onClose={() => setShowScanner(false)} />}
+      </AnimatePresence>
+
+      {/* Past orders modal */}
+      <AnimatePresence>
+        {showOrders && persona && (
+          <PastOrdersModal persona={persona} onClose={() => setShowOrders(false)} />
+        )}
       </AnimatePresence>
 
       {/* Mobile cart overlay */}

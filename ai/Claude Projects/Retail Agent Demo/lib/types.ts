@@ -1,3 +1,39 @@
+export interface Nutrition {
+  servingSize: string
+  calories: number
+  fat: number
+  saturatedFat: number
+  cholesterol: number
+  sodium: number
+  carbohydrates: number
+  sugar: number
+  fiber: number
+  protein: number
+  // Optional vitamins / minerals / extras
+  vitaminA?: string
+  vitaminC?: string
+  vitaminD?: string
+  vitaminE?: string
+  vitaminK?: string
+  calcium?: string
+  iron?: string
+  potassium?: string
+  zinc?: string
+  omega3?: string
+  antioxidants?: string
+  caffeine?: string
+  probiotics?: string
+  minerals?: string
+  folate?: string
+  niacin?: string
+  phosphorus?: string
+  selenium?: string
+  iodine?: string
+  thiamin?: string
+  magnesium?: string
+  ironDV?: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -12,6 +48,7 @@ export interface Product {
   tags: string[]
   rating: number
   reviewCount: number
+  nutrition?: Nutrition
 }
 
 export interface CartItem {
@@ -19,14 +56,40 @@ export interface CartItem {
   quantity: number
 }
 
+export interface PaymentDetails {
+  type: 'apple-pay' | 'venmo' | 'credit-card' | 'debit-card'
+  label: string       // e.g. "Visa ending in 4521"
+  last4?: string      // last 4 digits for card types
+  network?: string    // "Visa", "Mastercard"
+  handle?: string     // for Venmo: "@handle"
+}
+
+export interface PastOrderItem {
+  productId: string
+  productName: string
+  quantity: number
+  priceAtOrder: number
+}
+
+export interface PastOrder {
+  id: string
+  date: string        // ISO date string
+  items: PastOrderItem[]
+  total: number
+  shipping: 'standard' | 'express' | 'overnight'
+}
+
 export interface UserPersona {
+  name: string
   ageGroup: string
   style: string[]
   interests: string[]
-  preferredPayment: 'card' | 'apple-pay' | 'google-pay' | 'buy-now-pay-later'
+  preferredPayment: 'credit-card' | 'debit-card' | 'apple-pay' | 'venmo'
+  paymentDetails: PaymentDetails
   shippingPreference: 'standard' | 'express' | 'overnight'
   personalizedDeals: PersonalizedDeal[]
   vibe: string
+  pastOrders: PastOrder[]
 }
 
 export interface PersonalizedDeal {
