@@ -47,7 +47,7 @@ spec:
     spec:
       containers:
         - name: retail-agent
-          image: msvirtualguy/retail-agent-demo:v3
+          image: msvirtualguy/retail-agent-demo:v5
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
