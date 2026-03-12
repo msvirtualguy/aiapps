@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import type { ChatMessage } from '@/lib/types'
 import { Bot, User, Zap } from 'lucide-react'
 import { clsx } from 'clsx'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user'
@@ -44,7 +46,30 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               ? 'bg-brand-600 text-white rounded-tr-sm'
               : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
           )}>
-            {message.content}
+            {isUser ? message.content : (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  table: ({ children }) => (
+                    <div className="overflow-x-auto my-2">
+                      <table className="text-xs border-collapse w-full">{children}</table>
+                    </div>
+                  ),
+                  thead: ({ children }) => <thead className="bg-slate-100">{children}</thead>,
+                  th: ({ children }) => (
+                    <th className="px-2.5 py-1.5 text-left font-semibold text-slate-700 border border-slate-200 whitespace-nowrap">{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="px-2.5 py-1.5 border border-slate-200 text-slate-700">{children}</td>
+                  ),
+                  tr: ({ children }) => <tr className="even:bg-slate-50">{children}</tr>,
+                  p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                  strong: ({ children }) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            )}
           </div>
         )}
 

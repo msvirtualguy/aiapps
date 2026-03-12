@@ -4,10 +4,14 @@ import { AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
 import { CartItem } from './CartItem'
 import { NeonButton } from '@/components/ui/NeonButton'
-import { ShoppingBag, ArrowRight } from 'lucide-react'
+import { ShoppingBag, ArrowRight, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-export function CartSidebar() {
+interface CartSidebarProps {
+  onSwiftCheckout?: () => void
+}
+
+export function CartSidebar({ onSwiftCheckout }: CartSidebarProps) {
   const { items, totalItems, subtotal } = useCart()
   const router = useRouter()
 
@@ -42,11 +46,20 @@ export function CartSidebar() {
       </div>
 
       {items.length > 0 && (
-        <div className="px-4 py-3 border-t border-slate-100 bg-white space-y-3">
-          <div className="flex justify-between items-center">
+        <div className="px-4 py-3 border-t border-slate-100 bg-white space-y-2">
+          <div className="flex justify-between items-center mb-1">
             <span className="text-xs font-semibold text-slate-500">Subtotal</span>
             <span className="text-lg font-bold text-slate-900">${subtotal.toFixed(2)}</span>
           </div>
+          {onSwiftCheckout && (
+            <button
+              onClick={onSwiftCheckout}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-colors"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              Swift Checkout
+            </button>
+          )}
           <NeonButton variant="green" size="md"
             className="w-full flex items-center justify-center gap-2"
             onClick={() => router.push('/checkout')}>

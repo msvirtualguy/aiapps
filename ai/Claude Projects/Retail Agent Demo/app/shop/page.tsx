@@ -8,6 +8,7 @@ import { CartSidebar } from '@/components/cart/CartSidebar'
 import { PersonaCard } from '@/components/camera/PersonaCard'
 import { GroceryListScanner } from '@/components/scanner/GroceryListScanner'
 import { PastOrdersModal } from '@/components/orders/PastOrdersModal'
+import { SwiftCheckoutModal } from '@/components/checkout/SwiftCheckoutModal'
 import { usePersona } from '@/context/PersonaContext'
 import { useCart } from '@/context/CartContext'
 import type { Product, CartItem } from '@/lib/types'
@@ -24,6 +25,7 @@ export default function ShopPage() {
   const [showCart, setShowCart] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [showOrders, setShowOrders] = useState(false)
+  const [showSwiftCheckout, setShowSwiftCheckout] = useState(false)
 
   const handleCartUpdate = (items: CartItem[]) => {
     if (items.length > 0) setShowCart(true)
@@ -125,7 +127,7 @@ export default function ShopPage() {
           className="w-72 shrink-0 border-l border-slate-200 hidden lg:flex lg:flex-col bg-white"
         >
           <div className="flex-1 p-3 min-h-0 flex flex-col">
-            <CartSidebar />
+            <CartSidebar onSwiftCheckout={() => setShowSwiftCheckout(true)} />
           </div>
         </motion.aside>
       </div>
@@ -139,6 +141,13 @@ export default function ShopPage() {
       <AnimatePresence>
         {showOrders && persona && (
           <PastOrdersModal persona={persona} onClose={() => setShowOrders(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Swift checkout modal */}
+      <AnimatePresence>
+        {showSwiftCheckout && (
+          <SwiftCheckoutModal persona={persona} onClose={() => setShowSwiftCheckout(false)} />
         )}
       </AnimatePresence>
 
@@ -156,7 +165,7 @@ export default function ShopPage() {
             className="w-80 h-full bg-white p-3"
             onClick={e => e.stopPropagation()}
           >
-            <CartSidebar />
+            <CartSidebar onSwiftCheckout={() => setShowSwiftCheckout(true)} />
           </motion.div>
         </motion.div>
       )}
