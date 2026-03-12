@@ -3,6 +3,11 @@ node_modules
 .git
 *.md
 tasks/
-.env*.local
 .env
+.env.local
+.env*.local
+*.local
 npm-debug.log*
+ai/
+.continue/
+.devcontainer/
