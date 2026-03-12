@@ -45,7 +45,7 @@ export const agentTools: OpenAI.Chat.ChatCompletionTool[] = [
         properties: {
           product_id: {
             type: 'string',
-            description: 'The product ID to add',
+            description: 'The product ID (e.g. "deli-001") or product name (e.g. "Boar\'s Head Roasted Turkey Breast"). Either works.',
           },
           quantity: {
             type: 'number',

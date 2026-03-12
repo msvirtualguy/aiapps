@@ -71,7 +71,13 @@ async function dispatchTool(
 
     } else if (name === 'add_to_cart') {
       const cart = getCart(sessionId)
-      const product = productMap.get(args.product_id)
+      let product = productMap.get(args.product_id)
+      if (!product) {
+        const needle = String(args.product_id).toLowerCase()
+        product = (products as Product[]).find(
+          p => p.name.toLowerCase().includes(needle) || p.id.toLowerCase() === needle
+        )
+      }
       if (!product) {
         result = { error: 'Product not found' }
         summary = 'Product not found'
