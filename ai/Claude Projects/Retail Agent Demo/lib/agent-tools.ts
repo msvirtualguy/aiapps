@@ -22,13 +22,13 @@ export const agentTools: OpenAI.Chat.ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'get_product_details',
-      description: 'Get full details for a specific product by its ID, including aisle location, stock status, promotions, and complete nutritional information (calories, sugar, protein, fat, carbohydrates, sodium, fiber, vitamins, minerals). Use this whenever a customer asks about nutrition, ingredients, calories, or health info.',
+      description: 'Get full details for a specific product, including aisle location, stock status, promotions, and complete nutritional information (calories, fat, saturated fat, cholesterol, sodium, carbohydrates, sugar, fiber, protein, vitamins, minerals). Use this immediately whenever a customer asks about nutrition, calories, fat, protein, sugar, ingredients, or any health info. You can pass either the product ID (e.g. "deli-001") or the product name (e.g. "Boar\'s Head Roasted Turkey Breast").',
       parameters: {
         type: 'object',
         properties: {
           product_id: {
             type: 'string',
-            description: 'The product ID, e.g. "elec-001"',
+            description: 'The product ID (e.g. "deli-001") or product name (e.g. "Boar\'s Head Roasted Turkey Breast"). Either works.',
           },
         },
         required: ['product_id'],

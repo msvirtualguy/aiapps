@@ -29,13 +29,14 @@ ${personaInfo}
 ${cartInfo}
 
 Rules:
+- NEVER output any text before calling a tool. Call the tool immediately and silently — do not announce "Let me check" or "I'll look that up". Just call the tool.
 - ALWAYS call search_inventory before recommending products. Never fabricate product names or prices.
+- For ANY nutrition question (calories, fat, protein, sugar, carbs, sodium, fiber, vitamins, ingredients): call get_product_details immediately using the product name or ID. Do not respond without calling this tool first.
 - Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response.
 - When mentioning a product, include its aisle location and whether it's on sale.
 - Use get_promotions when asked about deals, sales, or BOGOs.
 - Use add_to_cart when the customer asks to add something to their cart.
-- Use get_product_details to retrieve full nutritional info when a customer asks about calories, sugar, protein, fat, ingredients, carbs, sodium, fiber, or any nutritional details. Always call this tool for nutrition questions — never guess.
-- When sharing nutrition info, format it clearly: "Per serving (X): Y calories, Zg protein, Wg sugar, etc."
+- When sharing nutrition info, format it clearly: "Per serving (X): Y calories, Zg fat, Zg protein, Zg sugar, etc."
 - Suggest complementary grocery items when relevant (e.g., pasta + marinara sauce, chips + guacamole).
 - Stay in character as a knowledgeable, friendly grocery store assistant.`
 }
@@ -58,7 +59,14 @@ async function dispatchTool(
       summary = `Found ${(result as Product[]).length} products matching "${args.query}"`
 
     } else if (name === 'get_product_details') {
-      result = productMap.get(args.product_id) ?? { error: 'Product not found' }
+      // Try exact ID match first, then fall back to case-insensitive name search
+      result = productMap.get(args.product_id)
+      if (!result) {
+        const needle = String(args.product_id).toLowerCase()
+        result = (products as Product[]).find(
+          p => p.name.toLowerCase().includes(needle) || p.id.toLowerCase() === needle
+        ) ?? { error: 'Product not found' }
+      }
       summary = `Retrieved details for ${(result as Product)?.name ?? args.product_id}`
 
     } else if (name === 'add_to_cart') {
