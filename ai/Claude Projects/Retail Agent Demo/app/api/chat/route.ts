@@ -31,8 +31,8 @@ ${cartInfo}
 Rules:
 - NEVER output any text before calling a tool. Call tools silently — do not say "Let me check" or "I'll look that up".
 - ALWAYS call search_inventory before recommending products. Never fabricate product names or prices.
-- NUTRITION RULE (CRITICAL): Whenever the customer asks about calories, fat, saturated fat, protein, carbs, sodium, sugar, fiber, cholesterol, vitamins, minerals, ingredients, or any other nutrition topic — you MUST call get_product_details to get the nutrition data. search_inventory does NOT contain nutrition info. You must call get_product_details even if you already called search_inventory.
-- After calling get_product_details for a nutrition query, present the nutrition data as a markdown table with exactly two columns: **Nutrient** | **Amount**. The first row must be serving size. Include every field returned. Never use paragraph or sentence format for nutrition data.
+- NUTRITION RULE (CRITICAL): Whenever the customer asks about calories, fat, saturated fat, protein, carbs, sodium, sugar, fiber, cholesterol, vitamins, minerals, ingredients, or any other nutrition topic — you MUST call get_product_details. search_inventory does NOT return nutrition data.
+- After calling get_product_details, the result will contain a "nutritionTable" field with a pre-formatted markdown table. Copy that table VERBATIM into your response — do not reformat, summarize, or paraphrase it. Just output it exactly as provided.
 - Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response outside of nutrition tables.
 - When mentioning a product, include its aisle location and whether it's on sale.
 - Use get_promotions when asked about deals, sales, or BOGOs.
@@ -111,7 +111,34 @@ async function dispatchTool(
       summary = `Found ${(result as Product[]).length} products matching "${args.query}"`
 
     } else if (name === 'get_product_details') {
-      result = findProduct(String(args.product_id)) ?? { error: 'Product not found' }
+      const product = findProduct(String(args.product_id))
+      if (!product) {
+        result = { error: 'Product not found' }
+      } else {
+        // Pre-build the nutrition markdown table so the model just passes it through
+        let nutritionTable: string | null = null
+        if (product.nutrition) {
+          const n = product.nutrition as unknown as Record<string, unknown>
+          const KNOWN = ['servingSize','calories','fat','saturatedFat','cholesterol','sodium','carbohydrates','fiber','sugar','protein']
+          const rows: [string, string][] = [
+            ['Serving Size', String(n.servingSize ?? '—')],
+            ['Calories', String(n.calories ?? '—')],
+            ['Total Fat', n.fat != null ? `${n.fat}g` : '—'],
+            ['Saturated Fat', n.saturatedFat != null ? `${n.saturatedFat}g` : '—'],
+            ['Cholesterol', n.cholesterol != null ? `${n.cholesterol}mg` : '—'],
+            ['Sodium', n.sodium != null ? `${n.sodium}mg` : '—'],
+            ['Total Carbohydrates', n.carbohydrates != null ? `${n.carbohydrates}g` : '—'],
+            ['Dietary Fiber', n.fiber != null ? `${n.fiber}g` : '—'],
+            ['Total Sugar', n.sugar != null ? `${n.sugar}g` : '—'],
+            ['Protein', n.protein != null ? `${n.protein}g` : '—'],
+            ...Object.entries(n)
+              .filter(([k]) => !KNOWN.includes(k))
+              .map(([k, v]): [string, string] => [k, String(v)]),
+          ]
+          nutritionTable = `| Nutrient | Amount |\n|---|---|\n` + rows.map(([k, v]) => `| ${k} | ${v} |`).join('\n')
+        }
+        result = { ...product, nutritionTable }
+      }
       summary = `Retrieved details for ${(result as Product)?.name ?? args.product_id}`
 
     } else if (name === 'add_to_cart') {
