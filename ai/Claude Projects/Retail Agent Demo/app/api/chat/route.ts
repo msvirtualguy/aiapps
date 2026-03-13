@@ -31,9 +31,8 @@ ${cartInfo}
 Rules:
 - NEVER output any text before calling a tool. Call tools silently — do not say "Let me check" or "I'll look that up".
 - ALWAYS call search_inventory before recommending products. Never fabricate product names or prices.
-- NUTRITION RULE (CRITICAL): Whenever the customer asks about calories, fat, saturated fat, protein, carbs, sodium, sugar, fiber, cholesterol, vitamins, minerals, ingredients, or any other nutrition topic — you MUST call get_product_details. search_inventory does NOT return nutrition data.
-- After calling get_product_details, the result will contain a "nutritionTable" field with a pre-formatted markdown table. Copy that table VERBATIM into your response — do not reformat, summarize, or paraphrase it. Just output it exactly as provided.
-- Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response outside of nutrition tables.
+- NUTRITION RULE: When asked about nutrition, calories, fat, protein, etc. — call get_product_details. The nutrition table will be displayed automatically by the UI — do NOT reproduce it in your text response. Just give a 1-2 sentence summary (e.g. "Each bagel has 270 calories and 10g of protein.").
+- Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response.
 - When mentioning a product, include its aisle location and whether it's on sale.
 - Use get_promotions when asked about deals, sales, or BOGOs.
 - Use add_to_cart when the customer asks to add something to their cart.
@@ -78,16 +77,39 @@ function findProduct(query: string): Product | undefined {
   })
 }
 
+function buildNutritionTable(product: Product): string | null {
+  if (!product.nutrition) return null
+  const n = product.nutrition as unknown as Record<string, unknown>
+  const KNOWN = ['servingSize','calories','fat','saturatedFat','cholesterol','sodium','carbohydrates','fiber','sugar','protein']
+  const rows: [string, string][] = [
+    ['Serving Size', String(n.servingSize ?? '—')],
+    ['Calories', String(n.calories ?? '—')],
+    ['Total Fat', n.fat != null ? `${n.fat}g` : '—'],
+    ['Saturated Fat', n.saturatedFat != null ? `${n.saturatedFat}g` : '—'],
+    ['Cholesterol', n.cholesterol != null ? `${n.cholesterol}mg` : '—'],
+    ['Sodium', n.sodium != null ? `${n.sodium}mg` : '—'],
+    ['Total Carbohydrates', n.carbohydrates != null ? `${n.carbohydrates}g` : '—'],
+    ['Dietary Fiber', n.fiber != null ? `${n.fiber}g` : '—'],
+    ['Total Sugar', n.sugar != null ? `${n.sugar}g` : '—'],
+    ['Protein', n.protein != null ? `${n.protein}g` : '—'],
+    ...Object.entries(n)
+      .filter(([k]) => !KNOWN.includes(k))
+      .map(([k, v]): [string, string] => [k, String(v)]),
+  ]
+  return `**Nutrition Facts — ${product.name}**\n\n| Nutrient | Amount |\n|---|---|\n` + rows.map(([k, v]) => `| ${k} | ${v} |`).join('\n')
+}
+
 async function dispatchTool(
   toolCall: OpenAI.Chat.ChatCompletionMessageToolCall,
   sessionId: string,
   persona: UserPersona | null
-): Promise<{ tool_call_id: string; content: string; summary: string }> {
+): Promise<{ tool_call_id: string; content: string; summary: string; nutritionTable?: string }> {
   const args = JSON.parse(toolCall.function.arguments || '{}')
   const name = toolCall.function.name
 
   let result: unknown = null
   let summary = ''
+  let nutritionTable: string | undefined
 
   try {
     if (name === 'search_inventory') {
@@ -115,31 +137,26 @@ async function dispatchTool(
       if (!product) {
         result = { error: 'Product not found' }
       } else {
-        // Pre-build the nutrition markdown table so the model just passes it through
-        let nutritionTable: string | null = null
-        if (product.nutrition) {
-          const n = product.nutrition as unknown as Record<string, unknown>
-          const KNOWN = ['servingSize','calories','fat','saturatedFat','cholesterol','sodium','carbohydrates','fiber','sugar','protein']
-          const rows: [string, string][] = [
-            ['Serving Size', String(n.servingSize ?? '—')],
-            ['Calories', String(n.calories ?? '—')],
-            ['Total Fat', n.fat != null ? `${n.fat}g` : '—'],
-            ['Saturated Fat', n.saturatedFat != null ? `${n.saturatedFat}g` : '—'],
-            ['Cholesterol', n.cholesterol != null ? `${n.cholesterol}mg` : '—'],
-            ['Sodium', n.sodium != null ? `${n.sodium}mg` : '—'],
-            ['Total Carbohydrates', n.carbohydrates != null ? `${n.carbohydrates}g` : '—'],
-            ['Dietary Fiber', n.fiber != null ? `${n.fiber}g` : '—'],
-            ['Total Sugar', n.sugar != null ? `${n.sugar}g` : '—'],
-            ['Protein', n.protein != null ? `${n.protein}g` : '—'],
-            ...Object.entries(n)
-              .filter(([k]) => !KNOWN.includes(k))
-              .map(([k, v]): [string, string] => [k, String(v)]),
-          ]
-          nutritionTable = `| Nutrient | Amount |\n|---|---|\n` + rows.map(([k, v]) => `| ${k} | ${v} |`).join('\n')
+        const table = buildNutritionTable(product)
+        if (table) nutritionTable = table
+        // Give the model a minimal view — no raw nutrition JSON to confuse it
+        result = {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: product.price,
+          salePrice: product.salePrice,
+          bogoOffer: product.bogoOffer,
+          inStock: product.inStock,
+          aisle: product.aisle,
+          description: product.description,
+          hasNutrition: !!product.nutrition,
+          nutritionSummary: product.nutrition
+            ? `${product.nutrition.calories} cal, ${product.nutrition.protein}g protein, ${product.nutrition.fat}g fat, ${product.nutrition.carbohydrates}g carbs per serving (${product.nutrition.servingSize})`
+            : null,
         }
-        result = { ...product, nutritionTable }
       }
-      summary = `Retrieved details for ${(result as Product)?.name ?? args.product_id}`
+      summary = `Nutrition info: ${(result as Product)?.name ?? args.product_id}`
 
     } else if (name === 'add_to_cart') {
       const cart = getCart(sessionId)
@@ -213,6 +230,7 @@ async function dispatchTool(
     tool_call_id: toolCall.id,
     content: JSON.stringify(result),
     summary,
+    nutritionTable,
   }
 }
 
@@ -258,7 +276,7 @@ export async function POST(request: Request) {
             tools: agentTools,
             tool_choice: 'auto',
             temperature: 0.3,
-            max_tokens: 2048,
+            max_tokens: 1024,
           })
 
           const choice = response.choices[0]
@@ -275,30 +293,30 @@ export async function POST(request: Request) {
               send({ type: 'tool_call', name: result.summary })
             }
 
-            // Extract product results to send to UI for grid update
+            // Extract results to send to UI
             for (const tc of choice.message.tool_calls) {
+              const matchingResult = toolResults.find(r => r.tool_call_id === tc.id)
+              if (!matchingResult) continue
+
               if (tc.function.name === 'search_inventory') {
-                const matchingResult = toolResults.find(r => r.tool_call_id === tc.id)
-                if (matchingResult) {
-                  try {
-                    const products = JSON.parse(matchingResult.content)
-                    if (Array.isArray(products) && products.length > 0) {
-                      send({ type: 'products', data: products })
-                    }
-                  } catch { /* ignore parse errors */ }
-                }
+                try {
+                  const prods = JSON.parse(matchingResult.content)
+                  if (Array.isArray(prods) && prods.length > 0) {
+                    send({ type: 'products', data: prods })
+                  }
+                } catch { /* ignore */ }
               }
 
               if (tc.function.name === 'add_to_cart') {
-                const matchingResult = toolResults.find(r => r.tool_call_id === tc.id)
-                if (matchingResult) {
-                  try {
-                    const parsed = JSON.parse(matchingResult.content)
-                    if (parsed.cart) {
-                      send({ type: 'cart_update', data: parsed.cart })
-                    }
-                  } catch { /* ignore */ }
-                }
+                try {
+                  const parsed = JSON.parse(matchingResult.content)
+                  if (parsed.cart) send({ type: 'cart_update', data: parsed.cart })
+                } catch { /* ignore */ }
+              }
+
+              // Nutrition table: send directly — never rely on model to reproduce it
+              if (tc.function.name === 'get_product_details' && matchingResult.nutritionTable) {
+                send({ type: 'nutrition', data: matchingResult.nutritionTable })
               }
             }
 
@@ -311,7 +329,7 @@ export async function POST(request: Request) {
               })
             }
 
-            // Auto-inject get_product_details for nutrition queries if the model didn't call it
+            // Auto-inject get_product_details for nutrition queries if the model skipped it
             if (isNutritionQuery) {
               const alreadyCalledDetails = choice.message.tool_calls.some(
                 tc => tc.function.name === 'get_product_details'
@@ -330,10 +348,13 @@ export async function POST(request: Request) {
                             function: { name: 'get_product_details', arguments: JSON.stringify({ product_id: found[0].id }) },
                           }
                           const detailsResult = await dispatchTool(fakeCall, sessionId, persona)
-                          // Inject synthetic assistant turn + tool result so model sees nutritionTable
-                          history.push({ role: 'assistant', content: null, tool_calls: [fakeCall] })
+                          history.push({ role: 'assistant', content: '', tool_calls: [fakeCall] })
                           history.push({ role: 'tool', tool_call_id: fakeId, content: detailsResult.content })
                           send({ type: 'tool_call', name: detailsResult.summary })
+                          // Send nutrition table directly to UI
+                          if (detailsResult.nutritionTable) {
+                            send({ type: 'nutrition', data: detailsResult.nutritionTable })
+                          }
                         }
                       } catch { /* ignore */ }
                     }

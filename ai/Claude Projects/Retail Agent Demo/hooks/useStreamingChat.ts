@@ -89,6 +89,10 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
               options.onProductsFound?.(event.data)
             } else if (event.type === 'cart_update') {
               options.onCartUpdate?.(event.data)
+            } else if (event.type === 'nutrition') {
+              setMessages(prev => prev.map(m =>
+                m.id === assistantId ? { ...m, nutritionTable: event.data } : m
+              ))
             } else if (event.type === 'message') {
               setMessages(prev => prev.map(m =>
                 m.id === assistantId ? { ...m, content: event.content } : m

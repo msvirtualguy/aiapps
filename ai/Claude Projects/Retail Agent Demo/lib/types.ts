@@ -104,6 +104,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   toolCalls?: ToolCallEvent[]
+  nutritionTable?: string
   timestamp: Date
 }
 
