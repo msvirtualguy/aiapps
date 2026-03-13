@@ -28,16 +28,16 @@ function buildSystemPrompt(persona: UserPersona | null, cart: CartItem[]): strin
 ${personaInfo}
 ${cartInfo}
 
-Rules:
-- NEVER output any text before calling a tool. Call tools silently — do not say "Let me check" or "I'll look that up".
-- ALWAYS call search_inventory before recommending products. Never fabricate product names or prices.
-- NUTRITION RULE: When asked about nutrition, calories, fat, protein, etc. — call get_product_details. The nutrition table will be displayed automatically by the UI — do NOT reproduce it in your text response. Just give a 1-2 sentence summary (e.g. "Each bagel has 270 calories and 10g of protein.").
-- Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response.
-- When mentioning a product, include its aisle location and whether it's on sale.
+You have access to tools. Use them when needed, then always respond with a helpful text message.
+
+Guidelines:
+- Always call search_inventory before recommending products. Never fabricate product names or prices.
+- When asked about nutrition, calories, fat, protein, etc. — call get_product_details for that product.
+- After tool results are returned, respond with a helpful 2-4 sentence answer.
+- Include aisle location and sale status when mentioning products.
 - Use get_promotions when asked about deals, sales, or BOGOs.
-- Use add_to_cart when the customer asks to add something to their cart.
-- Suggest complementary grocery items when relevant (e.g., pasta + marinara sauce, chips + guacamole).
-- Stay in character as a knowledgeable, friendly grocery store assistant.`
+- Use add_to_cart when the customer wants to add something to their cart.
+- Be friendly and conversational.`
 }
 
 // Normalize: lowercase, strip diacritics (Häagen→haagen), collapse punctuation to spaces
@@ -114,7 +114,6 @@ async function dispatchTool(
   try {
     if (name === 'search_inventory') {
       const ids = await semanticSearch(args.query ?? '', 8)
-      // Return summary-only — omit nutrition so the model must call get_product_details for nutrition queries
       result = ids.map(id => {
         const p = productMap.get(id)
         if (!p) return null
@@ -139,7 +138,6 @@ async function dispatchTool(
       } else {
         const table = buildNutritionTable(product)
         if (table) nutritionTable = table
-        // Give the model a minimal view — no raw nutrition JSON to confuse it
         result = {
           id: product.id,
           name: product.name,
@@ -150,7 +148,6 @@ async function dispatchTool(
           inStock: product.inStock,
           aisle: product.aisle,
           description: product.description,
-          hasNutrition: !!product.nutrition,
           nutritionSummary: product.nutrition
             ? `${product.nutrition.calories} cal, ${product.nutrition.protein}g protein, ${product.nutrition.fat}g fat, ${product.nutrition.carbohydrates}g carbs per serving (${product.nutrition.servingSize})`
             : null,
@@ -242,7 +239,6 @@ export async function POST(request: Request) {
     persona: UserPersona | null
   }
 
-  // Detect nutrition queries so we can auto-inject get_product_details if the model skips it
   const lastUserContent = [...messages].reverse().find(m => m.role === 'user')?.content ?? ''
   const isNutritionQuery = typeof lastUserContent === 'string' &&
     NUTRITION_KEYWORDS.some(kw => lastUserContent.toLowerCase().includes(kw))
@@ -263,8 +259,11 @@ export async function POST(request: Request) {
         ...messages,
       ]
 
-      const MAX_ITERATIONS = 5
+      const MAX_ITERATIONS = 4
       let iterations = 0
+      // After the first round of tool calls, force tool_choice:'none' so the
+      // model MUST produce a text response instead of looping on more tool calls.
+      let hasCalledTools = false
 
       try {
         while (iterations < MAX_ITERATIONS) {
@@ -274,15 +273,18 @@ export async function POST(request: Request) {
             model: MODELS.llm,
             messages: history,
             tools: agentTools,
-            tool_choice: 'auto',
+            // Force text response after first tool round — prevents Qwen 7B looping
+            tool_choice: hasCalledTools ? 'none' : 'auto',
             temperature: 0.3,
-            max_tokens: 1024,
+            max_tokens: 2048,
           })
 
           const choice = response.choices[0]
           history.push(choice.message)
 
           if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
+            hasCalledTools = true
+
             // Dispatch all tool calls in parallel
             const toolResults = await Promise.all(
               choice.message.tool_calls.map(tc => dispatchTool(tc, sessionId, persona))
@@ -293,7 +295,7 @@ export async function POST(request: Request) {
               send({ type: 'tool_call', name: result.summary })
             }
 
-            // Extract results to send to UI
+            // Extract results to push to UI
             for (const tc of choice.message.tool_calls) {
               const matchingResult = toolResults.find(r => r.tool_call_id === tc.id)
               if (!matchingResult) continue
@@ -314,7 +316,7 @@ export async function POST(request: Request) {
                 } catch { /* ignore */ }
               }
 
-              // Nutrition table: send directly — never rely on model to reproduce it
+              // Nutrition table: send directly to UI — never rely on model to reproduce it
               if (tc.function.name === 'get_product_details' && matchingResult.nutritionTable) {
                 send({ type: 'nutrition', data: matchingResult.nutritionTable })
               }
@@ -351,7 +353,6 @@ export async function POST(request: Request) {
                           history.push({ role: 'assistant', content: '', tool_calls: [fakeCall] })
                           history.push({ role: 'tool', tool_call_id: fakeId, content: detailsResult.content })
                           send({ type: 'tool_call', name: detailsResult.summary })
-                          // Send nutrition table directly to UI
                           if (detailsResult.nutritionTable) {
                             send({ type: 'nutrition', data: detailsResult.nutritionTable })
                           }
@@ -365,12 +366,25 @@ export async function POST(request: Request) {
             }
 
           } else {
-            // Final response — stream the text
+            // Final response — model produced text
             const content = choice.message.content ?? ''
-            send({ type: 'message', content })
+            if (content) {
+              send({ type: 'message', content })
+            }
             break
           }
         }
+
+        // Fallback: if we burned through iterations without a text response, give a generic one
+        // This should never happen with tool_choice:'none' on the final iteration, but just in case
+        const lastMsg = history[history.length - 1]
+        if (lastMsg?.role !== 'assistant' || !(lastMsg as OpenAI.Chat.ChatCompletionAssistantMessageParam).content) {
+          const hasNutrition = history.some(m => m.role === 'tool')
+          if (!hasNutrition) {
+            send({ type: 'message', content: "I found some results for you — take a look at the products panel!" })
+          }
+        }
+
       } catch (err) {
         console.error('[chat] Agent error:', err)
         send({ type: 'message', content: "Oops, I hit a snag. Try asking me again?" })
