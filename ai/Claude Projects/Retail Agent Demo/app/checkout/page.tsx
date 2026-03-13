@@ -10,11 +10,34 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, CheckCircle, Truck, CreditCard, Smartphone, ShoppingBag,
-  Shield, Lock, Wallet
+  Shield, Lock, Wallet, MapPin, Store, Clock, ChevronRight, Search
 } from 'lucide-react'
 import { clsx } from 'clsx'
 
 type PaymentType = 'credit-card' | 'debit-card' | 'apple-pay' | 'venmo'
+type FulfillmentType = 'delivery' | 'pickup' | 'uber-eats' | 'doordash' | 'in-store'
+
+const MOCK_STORES = [
+  { id: 's1', name: 'FreshCart – Downtown',  address: '142 Main St',         distance: '0.8 mi', hours: 'Open until 10 PM', ready: '15–30 min' },
+  { id: 's2', name: 'FreshCart – Midtown',   address: '780 Park Ave',        distance: '2.1 mi', hours: 'Open until 9 PM',  ready: '20–35 min' },
+  { id: 's3', name: 'FreshCart – Westside',  address: '2230 Commerce Blvd',  distance: '3.4 mi', hours: 'Open until 11 PM', ready: '30–45 min' },
+]
+
+function UberEatsIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 4.8c1.988 0 3.6 1.612 3.6 3.6S13.988 12 12 12s-3.6-1.612-3.6-3.6S10.012 4.8 12 4.8zm0 14.4c-3 0-5.64-1.524-7.2-3.84.036-2.388 4.8-3.696 7.2-3.696 2.388 0 7.164 1.308 7.2 3.696C17.64 17.676 15 19.2 12 19.2z"/>
+    </svg>
+  )
+}
+
+function DoorDashIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M12.217 0C6.425 0 1.56 4.39.803 10.125H6.5c.68-2.56 3.01-4.44 5.717-4.44 3.317 0 6 2.683 6 6s-2.683 6-6 6c-2.707 0-5.037-1.88-5.717-4.44H.803C1.56 19.61 6.425 24 12.217 24 18.465 24 23.5 18.965 23.5 12.717v-.434C23.5 5.035 18.465 0 12.217 0z"/>
+    </svg>
+  )
+}
 
 const PAYMENT_METHODS: Array<{ id: PaymentType; label: string; icon: React.ElementType; color: string }> = [
   { id: 'credit-card',  label: 'Credit Card',  icon: CreditCard,  color: 'text-blue-600'   },
@@ -150,6 +173,10 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { items, subtotal, clearCart } = useCart()
   const { persona } = usePersona()
+  const [fulfillment, setFulfillment] = useState<FulfillmentType>('delivery')
+  const [zip, setZip] = useState('')
+  const [zipSubmitted, setZipSubmitted] = useState(false)
+  const [selectedStore, setSelectedStore] = useState<string>(MOCK_STORES[0].id)
   const [shipping, setShipping] = useState<'standard' | 'express' | 'overnight'>(
     persona?.shippingPreference ?? 'standard'
   )
@@ -159,7 +186,15 @@ export default function CheckoutPage() {
   const [ordered, setOrdered] = useState(false)
   const [loading, setLoading] = useState(false)
   const selectedShipping = SHIPPING_OPTIONS.find(o => o.id === shipping)!
-  const total = subtotal + selectedShipping.price
+
+  const deliveryFee = fulfillment === 'uber-eats' ? 3.99 : fulfillment === 'doordash' ? 4.99 : fulfillment === 'delivery' ? selectedShipping.price : 0
+  const total = subtotal + deliveryFee
+
+  const fulfillmentLabel = fulfillment === 'in-store' ? 'In-Store'
+    : fulfillment === 'pickup' ? `Pickup – ${MOCK_STORES.find(s => s.id === selectedStore)?.name}`
+    : fulfillment === 'uber-eats' ? 'Uber Eats Delivery'
+    : fulfillment === 'doordash' ? 'DoorDash Delivery'
+    : selectedShipping.label
 
   const handleOrder = async () => {
     setLoading(true)
@@ -183,13 +218,13 @@ export default function CheckoutPage() {
             <h1 className="text-2xl font-extrabold text-slate-900">Order Confirmed! 🎉</h1>
             {persona && <p className="text-slate-500 mt-1 text-sm">Thanks, {persona.name.split(' ')[0]}!</p>}
             <p className="text-slate-500 mt-2 text-sm">
-              Expected: <span className="font-semibold text-slate-700">{selectedShipping.eta}</span>
+              Fulfillment: <span className="font-semibold text-slate-700">{fulfillmentLabel}</span>
             </p>
           </div>
           <div className="card p-4 text-left space-y-2">
             {[
               ['Total', '$' + total.toFixed(2)],
-              ['Shipping', selectedShipping.label],
+              ['Fulfillment', fulfillmentLabel],
               ['Payment', persona?.paymentDetails.label ?? payment],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between text-sm">
@@ -262,10 +297,170 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* Shipping */}
+        {/* Fulfillment */}
         <div className="card p-5">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
-            <Truck className="w-4 h-4" /> Shipping
+            <Truck className="w-4 h-4" /> How would you like your order?
+          </h2>
+
+          {/* Option grid */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {/* In-Store */}
+            <button onClick={() => setFulfillment('in-store')}
+              className={clsx('flex flex-col items-center gap-2 p-3.5 rounded-xl border transition-all text-center',
+                fulfillment === 'in-store' ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+              <Store className={clsx('w-5 h-5', fulfillment === 'in-store' ? 'text-brand-600' : 'text-slate-400')} />
+              <div>
+                <p className="text-xs font-bold text-slate-800">In-Store</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">You&apos;re here now</p>
+              </div>
+              {fulfillment === 'in-store' && <div className="w-1.5 h-1.5 rounded-full bg-brand-600" />}
+            </button>
+
+            {/* Pickup */}
+            <button onClick={() => setFulfillment('pickup')}
+              className={clsx('flex flex-col items-center gap-2 p-3.5 rounded-xl border transition-all text-center',
+                fulfillment === 'pickup' ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+              <MapPin className={clsx('w-5 h-5', fulfillment === 'pickup' ? 'text-brand-600' : 'text-slate-400')} />
+              <div>
+                <p className="text-xs font-bold text-slate-800">Pickup</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Find nearest store</p>
+              </div>
+              {fulfillment === 'pickup' && <div className="w-1.5 h-1.5 rounded-full bg-brand-600" />}
+            </button>
+
+            {/* Uber Eats */}
+            <button onClick={() => setFulfillment('uber-eats')}
+              className={clsx('flex flex-col items-center gap-2 p-3.5 rounded-xl border transition-all text-center',
+                fulfillment === 'uber-eats' ? 'border-[#06C167] bg-[#06C167]/5 ring-1 ring-[#06C167]/20' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+              <UberEatsIcon className={clsx('w-5 h-5', fulfillment === 'uber-eats' ? 'text-[#06C167]' : 'text-slate-400')} />
+              <div>
+                <p className="text-xs font-bold text-slate-800">Uber Eats</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">$3.99 · ~30–45 min</p>
+              </div>
+              {fulfillment === 'uber-eats' && <div className="w-1.5 h-1.5 rounded-full bg-[#06C167]" />}
+            </button>
+
+            {/* DoorDash */}
+            <button onClick={() => setFulfillment('doordash')}
+              className={clsx('flex flex-col items-center gap-2 p-3.5 rounded-xl border transition-all text-center',
+                fulfillment === 'doordash' ? 'border-[#FF3008] bg-[#FF3008]/5 ring-1 ring-[#FF3008]/20' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+              <DoorDashIcon className={clsx('w-5 h-5', fulfillment === 'doordash' ? 'text-[#FF3008]' : 'text-slate-400')} />
+              <div>
+                <p className="text-xs font-bold text-slate-800">DoorDash</p>
+                <p className="text-[10px] text-slate-400 mt-0.5">$4.99 · ~25–40 min</p>
+              </div>
+              {fulfillment === 'doordash' && <div className="w-1.5 h-1.5 rounded-full bg-[#FF3008]" />}
+            </button>
+
+            {/* Standard Delivery (full width) */}
+            <button onClick={() => setFulfillment('delivery')}
+              className={clsx('col-span-2 flex items-center justify-between gap-2 p-3.5 rounded-xl border transition-all',
+                fulfillment === 'delivery' ? 'border-brand-400 bg-brand-50 ring-1 ring-brand-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+              <div className="flex items-center gap-3">
+                <Truck className={clsx('w-5 h-5', fulfillment === 'delivery' ? 'text-brand-600' : 'text-slate-400')} />
+                <div className="text-left">
+                  <p className="text-xs font-bold text-slate-800">Standard Delivery</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Choose shipping speed below</p>
+                </div>
+              </div>
+              {fulfillment === 'delivery' && <div className="w-1.5 h-1.5 rounded-full bg-brand-600" />}
+            </button>
+          </div>
+
+          {/* Pickup: zip + store list */}
+          {fulfillment === 'pickup' && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 mt-2">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text" placeholder="Enter your zip code"
+                    value={zip} onChange={e => { setZip(e.target.value); setZipSubmitted(false) }}
+                    onKeyDown={e => e.key === 'Enter' && zip.length >= 5 && setZipSubmitted(true)}
+                    maxLength={10}
+                    className="input pl-8 text-sm"
+                  />
+                </div>
+                <button
+                  onClick={() => zip.length >= 5 && setZipSubmitted(true)}
+                  className="px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors">
+                  Find
+                </button>
+              </div>
+              {(zipSubmitted || zip.length >= 5) && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+                    3 stores near {zip || 'you'}
+                  </p>
+                  {MOCK_STORES.map(store => (
+                    <label key={store.id}
+                      className={clsx('flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all',
+                        selectedStore === store.id ? 'border-brand-300 bg-brand-50 ring-1 ring-brand-100' : 'border-slate-200 hover:border-slate-300 bg-white')}>
+                      <div className={clsx('w-4 h-4 mt-0.5 rounded-full border-2 shrink-0 flex items-center justify-center',
+                        selectedStore === store.id ? 'border-brand-600' : 'border-slate-300')}>
+                        {selectedStore === store.id && <div className="w-2 h-2 rounded-full bg-brand-600" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-800">{store.name}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{store.address}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><MapPin className="w-2.5 h-2.5" />{store.distance}</span>
+                          <span className="flex items-center gap-1 text-[10px] text-slate-400"><Clock className="w-2.5 h-2.5" />{store.hours}</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-semibold text-emerald-600 shrink-0">Ready {store.ready}</span>
+                      <input type="radio" name="store" value={store.id}
+                        checked={selectedStore === store.id} onChange={() => setSelectedStore(store.id)} className="sr-only" />
+                    </label>
+                  ))}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+
+          {/* In-store notice */}
+          {fulfillment === 'in-store' && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 mt-2">
+              <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-emerald-800">You&apos;re shopping in-store</p>
+                <p className="text-[10px] text-emerald-600 mt-0.5">Your digital cart will be ready at the register</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Uber Eats notice */}
+          {fulfillment === 'uber-eats' && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 p-3.5 rounded-xl bg-[#06C167]/5 border border-[#06C167]/20 mt-2">
+              <UberEatsIcon className="w-6 h-6 text-[#06C167] shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-slate-800">Uber Eats delivery</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Estimated 30–45 min · $3.99 delivery fee</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* DoorDash notice */}
+          {fulfillment === 'doordash' && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 p-3.5 rounded-xl bg-[#FF3008]/5 border border-[#FF3008]/20 mt-2">
+              <DoorDashIcon className="w-6 h-6 text-[#FF3008] shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-slate-800">DoorDash delivery</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Estimated 25–40 min · $4.99 delivery fee</p>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Shipping speed (only for standard delivery) */}
+        {fulfillment === 'delivery' && (
+        <div className="card p-5">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <Truck className="w-4 h-4" /> Shipping Speed
             {persona && <span className="ml-auto text-xs font-semibold text-brand-500 normal-case">AI pre-selected</span>}
           </h2>
           <div className="space-y-2">
@@ -292,6 +487,7 @@ export default function CheckoutPage() {
             ))}
           </div>
         </div>
+        )}
 
         {/* Payment */}
         <div className="card p-5">
@@ -337,48 +533,33 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* Order summary (only shown for non-card types since card has its own Pay button) */}
-        {(payment === 'apple-pay' || payment === 'venmo') && (
-          <div className="card p-5 border-brand-200 ring-1 ring-brand-100">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="font-medium text-slate-800">{'$' + subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Shipping</span>
-                <span className="font-medium">
-                  {selectedShipping.price === 0 ? <span className="text-emerald-600">Free</span> : '$' + selectedShipping.price.toFixed(2)}
-                </span>
-              </div>
-              <div className="border-t border-slate-100 pt-3 flex justify-between items-baseline">
-                <span className="font-bold text-slate-900">Total</span>
-                <span className="text-2xl font-extrabold text-slate-900">{'$' + total.toFixed(2)}</span>
-              </div>
+        {/* Order summary */}
+        <div className={clsx('card p-5', (payment === 'apple-pay' || payment === 'venmo') ? 'border-brand-200 ring-1 ring-brand-100' : 'border-slate-200')}>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Subtotal</span>
+              <span className="font-medium text-slate-800">{'$' + subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">
+                {fulfillment === 'in-store' ? 'Fulfillment'
+                  : fulfillment === 'pickup' ? 'Pickup'
+                  : fulfillment === 'uber-eats' ? 'Uber Eats fee'
+                  : fulfillment === 'doordash' ? 'DoorDash fee'
+                  : 'Shipping'}
+              </span>
+              <span className="font-medium">
+                {deliveryFee === 0
+                  ? <span className="text-emerald-600">{fulfillment === 'in-store' ? 'In-Store' : 'Free'}</span>
+                  : '$' + deliveryFee.toFixed(2)}
+              </span>
+            </div>
+            <div className="border-t border-slate-100 pt-3 flex justify-between items-baseline">
+              <span className="font-bold text-slate-900">Total</span>
+              <span className="text-2xl font-extrabold text-slate-900">{'$' + total.toFixed(2)}</span>
             </div>
           </div>
-        )}
-
-        {(payment === 'credit-card' || payment === 'debit-card') && (
-          <div className="card p-5 border-slate-200">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Subtotal</span>
-                <span className="font-medium text-slate-800">{'$' + subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Shipping</span>
-                <span className="font-medium">
-                  {selectedShipping.price === 0 ? <span className="text-emerald-600">Free</span> : '$' + selectedShipping.price.toFixed(2)}
-                </span>
-              </div>
-              <div className="border-t border-slate-100 pt-3 flex justify-between items-baseline">
-                <span className="font-bold text-slate-900">Total</span>
-                <span className="text-2xl font-extrabold text-slate-900">{'$' + total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
 
       </div>
     </div>
