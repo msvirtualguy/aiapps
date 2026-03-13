@@ -16,28 +16,27 @@ function getSessionId(): string {
 
 function buildSystemPrompt(persona: UserPersona | null, cart: CartItem[]): string {
   const personaInfo = persona
-    ? `Customer profile: ${persona.ageGroup}, style: ${persona.style.join(', ')}, interests: ${persona.interests.join(', ')}, vibe: ${persona.vibe}.`
-    : 'Customer profile: unknown.'
+    ? `Customer: ${persona.ageGroup}, interests: ${persona.interests.join(', ')}.`
+    : 'Customer: unknown.'
 
   const cartInfo = cart.length > 0
-    ? `Cart has ${cart.length} item(s): ${cart.map(i => `${i.product.name} x${i.quantity}`).join(', ')}.`
-    : 'Cart is empty.'
+    ? `Cart: ${cart.map(i => `${i.product.name} x${i.quantity}`).join(', ')}.`
+    : 'Cart: empty.'
 
-  return `You are FreshBot, an AI grocery assistant for FreshCart — a modern AI-powered grocery store.
+  return `You are FreshBot, a helpful AI grocery assistant for FreshCart.
 
 ${personaInfo}
 ${cartInfo}
 
-You have access to tools. Use them when needed, then always respond with a helpful text message.
+You have tools. Use them, then ALWAYS write a short friendly reply (1-3 sentences).
 
-Guidelines:
-- Always call search_inventory before recommending products. Never fabricate product names or prices.
-- When asked about nutrition, calories, fat, protein, etc. — call get_product_details for that product.
-- After tool results are returned, respond with a helpful 2-4 sentence answer.
-- Include aisle location and sale status when mentioning products.
-- Use get_promotions when asked about deals, sales, or BOGOs.
-- Use add_to_cart when the customer wants to add something to their cart.
-- Be friendly and conversational.`
+Tool usage:
+- search_inventory: find products, categories, or alternatives (use for any product question)
+- get_product_details: get nutrition facts, calories, ingredients (use whenever the customer asks about nutrition or health info)
+- get_promotions: show current sales, discounts, BOGOs
+- add_to_cart: add an item to the cart
+- Never guess product names or prices — always use tools first.
+- After tool results come back, write your reply. Mention price, aisle, or deals when relevant.`
 }
 
 // Normalize: lowercase, strip diacritics (Häagen→haagen), collapse punctuation to spaces
@@ -250,8 +249,15 @@ export async function POST(request: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      // Track what was sent so we can generate a smart fallback if the model returns empty text
+      let messageSent = false
+      let lastProductsFound: Array<{ id: string; name: string }> = []
+      let nutritionProducts: string[] = []
+      let cartUpdated = false
+
       const send = (data: object) => {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+        if ((data as { type: string }).type === 'message') messageSent = true
       }
 
       const history: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -312,6 +318,7 @@ export async function POST(request: Request) {
                   const prods = JSON.parse(matchingResult.content)
                   if (Array.isArray(prods) && prods.length > 0) {
                     send({ type: 'products', data: prods })
+                    lastProductsFound = prods
                   }
                 } catch { /* ignore */ }
               }
@@ -319,13 +326,20 @@ export async function POST(request: Request) {
               if (tc.function.name === 'add_to_cart') {
                 try {
                   const parsed = JSON.parse(matchingResult.content)
-                  if (parsed.cart) send({ type: 'cart_update', data: parsed.cart })
+                  if (parsed.cart) {
+                    send({ type: 'cart_update', data: parsed.cart })
+                    cartUpdated = true
+                  }
                 } catch { /* ignore */ }
               }
 
               // Nutrition table: send directly to UI — never rely on model to reproduce it
               if (tc.function.name === 'get_product_details' && matchingResult.nutritionTable) {
                 send({ type: 'nutrition', data: matchingResult.nutritionTable })
+                try {
+                  const parsed = JSON.parse(matchingResult.content)
+                  if (parsed.name) nutritionProducts.push(parsed.name)
+                } catch { /* ignore */ }
               }
             }
 
@@ -362,6 +376,10 @@ export async function POST(request: Request) {
                           send({ type: 'tool_call', name: detailsResult.summary })
                           if (detailsResult.nutritionTable) {
                             send({ type: 'nutrition', data: detailsResult.nutritionTable })
+                            try {
+                              const parsed = JSON.parse(detailsResult.content)
+                              if (parsed.name) nutritionProducts.push(parsed.name)
+                            } catch { /* ignore */ }
                           }
                         }
                       } catch { /* ignore */ }
@@ -382,14 +400,21 @@ export async function POST(request: Request) {
           }
         }
 
-        // Fallback: if we burned through iterations without a text response, give a generic one
-        // This should never happen with tool_choice:'none' on the final iteration, but just in case
-        const lastMsg = history[history.length - 1]
-        if (lastMsg?.role !== 'assistant' || !(lastMsg as OpenAI.Chat.ChatCompletionAssistantMessageParam).content) {
-          const hasNutrition = history.some(m => m.role === 'tool')
-          if (!hasNutrition) {
-            send({ type: 'message', content: "I found some results for you — take a look at the products panel!" })
+        // If the model returned empty content (common with Qwen 7B), generate a smart
+        // deterministic fallback based on what tools were actually called.
+        if (!messageSent) {
+          let fallback: string
+          if (nutritionProducts.length > 0) {
+            const names = nutritionProducts.join(' and ')
+            fallback = `Here's the complete nutrition breakdown for **${names}**! The table above has all the details.`
+          } else if (lastProductsFound.length > 0) {
+            fallback = `I found **${lastProductsFound.length} item${lastProductsFound.length !== 1 ? 's' : ''}** that match — check out the products panel for details!`
+          } else if (cartUpdated) {
+            fallback = `Done — I've updated your cart!`
+          } else {
+            fallback = "I looked that up for you — check out the results!"
           }
+          send({ type: 'message', content: fallback })
         }
 
       } catch (err) {
