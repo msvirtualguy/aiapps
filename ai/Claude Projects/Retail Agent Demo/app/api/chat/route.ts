@@ -280,9 +280,16 @@ export async function POST(request: Request) {
           })
 
           const choice = response.choices[0]
-          history.push(choice.message)
+          // Qwen sometimes includes preamble text alongside tool_calls — push stripped
+          // version to history so tool results attach cleanly
+          const msgForHistory = choice.message.tool_calls?.length
+            ? { ...choice.message, content: '' }
+            : choice.message
+          history.push(msgForHistory)
 
-          if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls) {
+          // Qwen (and some other models) return finish_reason:'stop' even when tool_calls
+          // are present — check for tool_calls existence, not finish_reason
+          if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
             hasCalledTools = true
 
             // Dispatch all tool calls in parallel
