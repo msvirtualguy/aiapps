@@ -3,6 +3,8 @@ node_modules
 .git
 *.md
 tasks/
+docs/
+*.tsbuildinfo
 .env
 .env.local
 .env*.local
