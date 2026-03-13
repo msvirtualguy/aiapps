@@ -216,11 +216,18 @@ async function dispatchTool(
   }
 }
 
+const NUTRITION_KEYWORDS = ['calori', 'fat', 'protein', 'carb', 'sodium', 'sugar', 'fiber', 'nutrition', 'ingredient', 'vitamin', 'mineral', 'cholesterol', 'saturated', 'serving']
+
 export async function POST(request: Request) {
   const { messages, persona } = await request.json() as {
     messages: OpenAI.Chat.ChatCompletionMessageParam[]
     persona: UserPersona | null
   }
+
+  // Detect nutrition queries so we can auto-inject get_product_details if the model skips it
+  const lastUserContent = [...messages].reverse().find(m => m.role === 'user')?.content ?? ''
+  const isNutritionQuery = typeof lastUserContent === 'string' &&
+    NUTRITION_KEYWORDS.some(kw => lastUserContent.toLowerCase().includes(kw))
 
   const sessionId = getSessionId()
   const cart = getCart(sessionId)
@@ -302,6 +309,38 @@ export async function POST(request: Request) {
                 tool_call_id: result.tool_call_id,
                 content: result.content,
               })
+            }
+
+            // Auto-inject get_product_details for nutrition queries if the model didn't call it
+            if (isNutritionQuery) {
+              const alreadyCalledDetails = choice.message.tool_calls.some(
+                tc => tc.function.name === 'get_product_details'
+              )
+              if (!alreadyCalledDetails) {
+                for (const tc of choice.message.tool_calls) {
+                  if (tc.function.name === 'search_inventory') {
+                    const searchResult = toolResults.find(r => r.tool_call_id === tc.id)
+                    if (searchResult) {
+                      try {
+                        const found = JSON.parse(searchResult.content)
+                        if (Array.isArray(found) && found.length > 0) {
+                          const fakeId = `auto_${Date.now()}`
+                          const fakeCall: OpenAI.Chat.ChatCompletionMessageToolCall = {
+                            id: fakeId, type: 'function',
+                            function: { name: 'get_product_details', arguments: JSON.stringify({ product_id: found[0].id }) },
+                          }
+                          const detailsResult = await dispatchTool(fakeCall, sessionId, persona)
+                          // Inject synthetic assistant turn + tool result so model sees nutritionTable
+                          history.push({ role: 'assistant', content: null, tool_calls: [fakeCall] })
+                          history.push({ role: 'tool', tool_call_id: fakeId, content: detailsResult.content })
+                          send({ type: 'tool_call', name: detailsResult.summary })
+                        }
+                      } catch { /* ignore */ }
+                    }
+                    break
+                  }
+                }
+              }
             }
 
           } else {
