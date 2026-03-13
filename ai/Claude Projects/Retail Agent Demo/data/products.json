@@ -151,7 +151,7 @@
     "inStock": true,
     "aisle": "P2",
     "description": "Firm, meaty Roma tomatoes with low moisture and concentrated flavor. Ideal for cooking sauces, roasting, and fresh slicing. Locally sourced when in season.",
-    "imageUrl": "https://images.unsplash.com/photo-1546470427-e26264be0b0d?w=400&auto=format",
+    "imageUrl": "https://images.unsplash.com/photo-1616789663695-b80a1a9b429e?w=400&auto=format",
     "tags": [
       "tomatoes",
       "roma",
@@ -539,7 +539,7 @@
     "inStock": true,
     "aisle": "BK1",
     "description": "New York-style everything bagels loaded with sesame seeds, poppy seeds, onion, garlic, and salt. Dense, chewy interior with a golden crust. Kettle-boiled before baking.",
-    "imageUrl": "https://images.unsplash.com/photo-1585325701165-c7d07a2a8c5a?w=400&auto=format",
+    "imageUrl": "https://images.unsplash.com/photo-1627308595260-6fad84c40413?w=400&auto=format",
     "tags": [
       "bagels",
       "everything bagel",
@@ -824,7 +824,7 @@
     "inStock": true,
     "aisle": "BV1",
     "description": "100% pure squeezed orange juice with no added sugars or preservatives. Pasteurized for safety. Available in original, no pulp, and some pulp varieties. High in vitamin C.",
-    "imageUrl": "https://images.unsplash.com/photo-1600718374621-8de0db2b5567?w=400&auto=format",
+    "imageUrl": "https://images.unsplash.com/photo-1640213505284-21352ee0d76b?w=400&auto=format",
     "tags": [
       "orange juice",
       "tropicana",
@@ -1038,7 +1038,7 @@
     "inStock": true,
     "aisle": "DL2",
     "description": "Made fresh in-store daily with ripe Hass avocados, lime juice, cilantro, jalapeño, and sea salt. No preservatives or artificial ingredients. Best within 2 days of purchase.",
-    "imageUrl": "https://images.unsplash.com/photo-1541519227354-08fa5d50c820?w=400&auto=format",
+    "imageUrl": "https://images.unsplash.com/photo-1595016111459-799a195e7452?w=400&auto=format",
     "tags": [
       "guacamole",
       "avocado",
