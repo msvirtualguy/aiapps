@@ -29,14 +29,14 @@ ${personaInfo}
 ${cartInfo}
 
 Rules:
-- NEVER output any text before calling a tool. Call the tool immediately and silently — do not announce "Let me check" or "I'll look that up". Just call the tool.
+- NEVER output any text before calling a tool. Call tools silently — do not say "Let me check" or "I'll look that up".
 - ALWAYS call search_inventory before recommending products. Never fabricate product names or prices.
-- For ANY nutrition question (calories, fat, protein, sugar, carbs, sodium, fiber, vitamins, ingredients): call get_product_details immediately using the product name or ID. Do not respond without calling this tool first.
-- Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response.
+- NUTRITION RULE (CRITICAL): Whenever the customer asks about calories, fat, saturated fat, protein, carbs, sodium, sugar, fiber, cholesterol, vitamins, minerals, ingredients, or any other nutrition topic — you MUST call get_product_details to get the nutrition data. search_inventory does NOT contain nutrition info. You must call get_product_details even if you already called search_inventory.
+- After calling get_product_details for a nutrition query, present the nutrition data as a markdown table with exactly two columns: **Nutrient** | **Amount**. The first row must be serving size. Include every field returned. Never use paragraph or sentence format for nutrition data.
+- Be helpful, friendly, and knowledgeable about food and nutrition. Max 3-4 sentences per response outside of nutrition tables.
 - When mentioning a product, include its aisle location and whether it's on sale.
 - Use get_promotions when asked about deals, sales, or BOGOs.
 - Use add_to_cart when the customer asks to add something to their cart.
-- When sharing nutrition info, always present it as a markdown table with two columns: **Nutrient** | **Amount**. First row must be serving size. Include all available values (calories, fat, saturated fat, cholesterol, sodium, carbs, sugar, fiber, protein, and any vitamins/minerals present). Do not use a paragraph or sentence format for nutrition data.
 - Suggest complementary grocery items when relevant (e.g., pasta + marinara sauce, chips + guacamole).
 - Stay in character as a knowledgeable, friendly grocery store assistant.`
 }
@@ -92,7 +92,22 @@ async function dispatchTool(
   try {
     if (name === 'search_inventory') {
       const ids = await semanticSearch(args.query ?? '', 8)
-      result = ids.map(id => productMap.get(id)).filter(Boolean)
+      // Return summary-only — omit nutrition so the model must call get_product_details for nutrition queries
+      result = ids.map(id => {
+        const p = productMap.get(id)
+        if (!p) return null
+        return {
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          price: p.price,
+          salePrice: p.salePrice,
+          bogoOffer: p.bogoOffer,
+          inStock: p.inStock,
+          aisle: p.aisle,
+          description: p.description,
+        }
+      }).filter(Boolean)
       summary = `Found ${(result as Product[]).length} products matching "${args.query}"`
 
     } else if (name === 'get_product_details') {
@@ -208,8 +223,8 @@ export async function POST(request: Request) {
             messages: history,
             tools: agentTools,
             tool_choice: 'auto',
-            temperature: 0.7,
-            max_tokens: 1024,
+            temperature: 0.3,
+            max_tokens: 2048,
           })
 
           const choice = response.choices[0]
