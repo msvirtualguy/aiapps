@@ -12,9 +12,9 @@ metadata:
 data:
   # Verify model names with: curl -H "Authorization: Bearer $NAI_API_KEY" $NAI_BASE_URL/models
   NAI_BASE_URL: "https://192.168.110.51/enterpriseai/v1"
-  NAI_LLM_MODEL: "qwen25-vl7b-in-nvfp4"
-  NAI_VISION_MODEL: "qwen25-vl7b-in-nvfp4"
-  NAI_EMBEDDINGS_MODEL: "ll-nemo-embed-1b-v2"
+  NAI_LLM_MODEL: "ccnextstoreunified"
+  NAI_VISION_MODEL: "ccnextstoreunified"
+  NAI_EMBEDDINGS_MODEL: "csnextstoreembed"
   NODE_ENV: "production"
   NEXT_TELEMETRY_DISABLED: "1"
   NODE_TLS_REJECT_UNAUTHORIZED: "0"
