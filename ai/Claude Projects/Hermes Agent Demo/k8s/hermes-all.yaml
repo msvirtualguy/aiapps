@@ -62,8 +62,11 @@ data:
       default: "${NAI_MODEL}"
       provider: "custom"
       base_url: "${OPENAI_BASE_URL}"
-      context_length: 8192
-      max_tokens: 2048
+      # Override: bypasses Hermes's 64K minimum guard so the agent starts.
+      # Actual usable context is limited by what NAI allows for this model.
+      # To increase the real limit, raise max_model_len in the NAI console.
+      context_length: 65536
+      max_tokens: 4096
 
     memory:
       memory_enabled: true

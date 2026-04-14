@@ -29,8 +29,11 @@ data:
       # if the env var is absent.
       base_url: "https://REPLACE_NAI_ENDPOINT/v1"
 
-      context_length: 8192
-      max_tokens: 2048
+      # Override: bypasses Hermes's 64K minimum guard so the agent starts.
+      # Actual usable context is limited by what NAI allows for this model.
+      # To increase the real limit, raise max_model_len in the NAI console.
+      context_length: 65536
+      max_tokens: 4096
 
     memory:
       memory_enabled: true
