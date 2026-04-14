@@ -80,7 +80,38 @@ data:
     -----END CERTIFICATE-----
 
 ---
-# ── 4. ConfigMap (cli-config.yaml) ────────────────────────────────────────────
+# ── 4. ConfigMap (Python SSL patch) ──────────────────────────────────────────
+# The cluster SSL inspection proxy re-signs all outbound TLS (NAI + Telegram)
+# using root-ca.local. We don't have the root CA cert, only a leaf cert.
+# This sitecustomize.py is loaded at Python startup and disables cert
+# verification globally for the Hermes venv — acceptable for a private
+# demo cluster. Proper fix: obtain root-ca.local cert from Nutanix Prism
+# (Settings → SSL Certificate) and mount it instead.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-ssl-patch
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: tls
+data:
+  sitecustomize.py: |
+    import ssl
+
+    _orig = ssl.create_default_context
+
+    def _unverified_context(*args, **kwargs):
+        ctx = _orig(*args, **kwargs)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+
+    ssl.create_default_context = _unverified_context
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+---
+# ── 5. ConfigMap (cli-config.yaml) ────────────────────────────────────────────
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -240,14 +271,12 @@ spec:
               value: /opt/data
             - name: PYTHONUNBUFFERED
               value: "1"
-            # Trust the NAI self-signed CA cert.
-            # httpx, requests, and urllib all respect these env vars.
-            - name: SSL_CERT_FILE
-              value: /etc/ssl/nai/ca.crt
-            - name: REQUESTS_CA_BUNDLE
-              value: /etc/ssl/nai/ca.crt
-            - name: CURL_CA_BUNDLE
-              value: /etc/ssl/nai/ca.crt
+            # Patch Python's ssl module at startup to disable cert verification.
+            # Covers httpx (Telegram + NAI), requests, and urllib uniformly.
+            # Root cause: cluster SSL inspection proxy uses root-ca.local which
+            # we don't have. Proper fix: mount root-ca.local from Nutanix Prism.
+            - name: PYTHONPATH
+              value: /opt/ssl-patch
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -285,8 +314,8 @@ spec:
           volumeMounts:
             - name: hermes-data
               mountPath: /opt/data
-            - name: nai-ca-cert
-              mountPath: /etc/ssl/nai
+            - name: hermes-ssl-patch
+              mountPath: /opt/ssl-patch
               readOnly: true
 
           livenessProbe:
@@ -323,9 +352,9 @@ spec:
             items:
               - key: config.yaml
                 path: config.yaml
-        - name: nai-ca-cert
+        - name: hermes-ssl-patch
           configMap:
-            name: nai-ca-cert
+            name: hermes-ssl-patch
 
       restartPolicy: Always
       terminationGracePeriodSeconds: 30

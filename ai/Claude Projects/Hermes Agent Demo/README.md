@@ -301,4 +301,5 @@ Hermes Agent Demo/
 | `invalid choice: 'telegram'` | Wrong gateway subcommand | Use `hermes gateway run` — platform selected by config, not arg |
 | `dial tcp 127.0.0.1:8080` | No kubeconfig loaded | Download from Rancher UI → set `KUBECONFIG` env var |
 | Config changes not picked up | Init container skips existing `config.yaml` | `kubectl exec ... -- rm /opt/data/config.yaml` then rollout restart |
+| `SSL: CERTIFICATE_VERIFY_FAILED` on Telegram or NAI | Cluster SSL inspection proxy re-signs all TLS with internal `root-ca.local` CA cert | Workaround: `PYTHONPATH` mounts `sitecustomize.py` that disables cert verification at Python startup. Proper fix: download `root-ca.local` from Nutanix Prism (Settings → SSL Certificate) and mount as trusted CA |
 | `context window of X below minimum 64,000` | Hermes enforces a 64K minimum guard | Set `context_length: 65536` in config to bypass the check. Actual context is bounded by NAI's `max_model_len` — raise that in the NAI console for full capacity |
