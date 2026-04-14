@@ -191,7 +191,9 @@ spec:
           imagePullPolicy: Always
           # Use args (not command) so the Docker ENTRYPOINT is preserved.
           # entrypoint.sh sets up dirs, drops privileges, then runs: hermes "$@"
-          args: ["gateway", "telegram"]
+          # "gateway run" starts whichever gateways are enabled in cli-config.yaml.
+          # Telegram is enabled via gateway.telegram.enabled: true in the ConfigMap.
+          args: ["gateway", "run"]
 
           env:
             - name: HERMES_HOME
@@ -241,7 +243,7 @@ spec:
               command:
                 - sh
                 - -c
-                - "pgrep -f 'hermes gateway' > /dev/null"
+                - "pgrep -f 'hermes' > /dev/null"
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
@@ -251,7 +253,7 @@ spec:
               command:
                 - sh
                 - -c
-                - "pgrep -f 'hermes gateway' > /dev/null"
+                - "pgrep -f 'hermes' > /dev/null"
             initialDelaySeconds: 20
             periodSeconds: 15
             failureThreshold: 2
