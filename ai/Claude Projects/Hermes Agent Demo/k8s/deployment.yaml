@@ -43,8 +43,8 @@ spec:
       # starts. This avoids a subPath mount conflict with the PVC root mount.
       initContainers:
         - name: config-writer
-          image: nousresearch/hermes-agent:v0.9.0
-          imagePullPolicy: IfNotPresent
+          image: nousresearch/hermes-agent:latest
+          imagePullPolicy: Always
           command:
             - sh
             - -c
@@ -71,8 +71,8 @@ spec:
       # ── Main Container ────────────────────────────────────────────────────
       containers:
         - name: hermes
-          image: nousresearch/hermes-agent:v0.9.0
-          imagePullPolicy: IfNotPresent
+          image: nousresearch/hermes-agent:latest
+          imagePullPolicy: Always
 
           # Start Hermes in Telegram gateway mode (outbound polling, no port needed).
           command: ["hermes", "gateway", "telegram"]
