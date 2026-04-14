@@ -409,55 +409,12 @@ spec:
       app: hermes
   policyTypes:
     - Ingress
-    - Egress
   ingress: []
-  egress:
-    # 1. DNS
-    - ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-
-    # 2. NAI Inference Endpoint + SSL inspection proxy (HTTPS).
-    #    Allow all RFC-1918 ranges on 443: covers NAI at 192.168.160.x and the
-    #    cluster's transparent SSL inspection proxy which may sit at a different
-    #    internal IP and intercepts all outbound TLS.
-    - ports:
-        - port: 443
-          protocol: TCP
-      to:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-        - ipBlock:
-            cidr: 172.16.0.0/12
-        - ipBlock:
-            cidr: 192.168.0.0/16
-
-    # 3. Telegram Bot API servers (official IP ranges)
-    - ports:
-        - port: 443
-          protocol: TCP
-      to:
-        - ipBlock:
-            cidr: 149.154.160.0/20
-        - ipBlock:
-            cidr: 91.108.4.0/22
-
-    # 4. npx/uvx package downloads for MCP server first-run
-    #    Remove once MCP servers are pre-cached in a custom image.
-    - ports:
-        - port: 443
-          protocol: TCP
-        - port: 80
-          protocol: TCP
-      to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
+  # Egress unrestricted — the cluster's transparent SSL inspection proxy
+  # routes outbound traffic through IPs outside predictable CIDRs, making
+  # destination-scoped egress rules impractical without knowing the proxy
+  # topology. Ingress deny-all still prevents any inbound attack surface.
+  # TODO: once the proxy's CIDR/IP is known, re-add scoped egress rules.
 
 ---
 # ── 8. PodDisruptionBudget ────────────────────────────────────────────────────
