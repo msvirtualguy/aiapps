@@ -152,8 +152,9 @@ spec:
         app.kubernetes.io/component: agent
     spec:
       securityContext:
-        runAsUser: 10000
-        runAsNonRoot: true
+        # entrypoint.sh starts as root, creates dirs, then gosu-drops to hermes (UID 10000).
+        # Forcing runAsNonRoot here would prevent that privilege drop from working.
+        # fsGroup ensures the PVC is group-writable by UID 10000 after the drop.
         fsGroup: 10000
         fsGroupChangePolicy: OnRootMismatch
 
@@ -181,8 +182,6 @@ spec:
               mountPath: /config-src
               readOnly: true
           securityContext:
-            runAsUser: 10000
-            runAsNonRoot: true
             allowPrivilegeEscalation: false
 
       containers:
@@ -257,10 +256,8 @@ spec:
             failureThreshold: 2
 
           securityContext:
+            # entrypoint.sh handles its own privilege drop via gosu — don't restrict here
             allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
 
       volumes:
         - name: hermes-data
