@@ -30,14 +30,20 @@ spec:
         - port: 53
           protocol: TCP
 
-    # 2. NAI Inference Endpoint (HTTPS) — scoped to the NAI subnet.
-    #    Replace REPLACE_NAI_CIDR with your NAI subnet (e.g. 192.168.160.0/24).
+    # 2. NAI Inference Endpoint + SSL inspection proxy (HTTPS).
+    #    Allow all RFC-1918 ranges on 443: covers NAI at 192.168.160.x and the
+    #    cluster's transparent SSL inspection proxy which may sit at a different
+    #    internal IP and intercepts all outbound TLS.
     - ports:
         - port: 443
           protocol: TCP
       to:
         - ipBlock:
-            cidr: REPLACE_NAI_CIDR
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
 
     # 3. Telegram Bot API servers (official IP ranges, outbound long-polling).
     - ports:
