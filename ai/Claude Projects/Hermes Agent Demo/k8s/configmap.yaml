@@ -21,7 +21,7 @@ data:
       default: "gemma-4"
 
       # "openai" provider works for any OpenAI-compatible endpoint.
-      provider: "openai"
+      provider: "custom"
 
       # base_url fallback — overridden at runtime by the OPENAI_BASE_URL env var
       # (sourced from the OPENAI_BASE_URL key in hermes-secrets).

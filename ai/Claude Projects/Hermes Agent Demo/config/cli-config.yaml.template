@@ -13,8 +13,9 @@ model:
   # Examples: "gemma-4", "gemma-3-27b-it", "mistral-7b-instruct"
   default: "gemma-4"
 
-  # "openai" provider works for any OpenAI-compatible endpoint.
-  provider: "openai"
+  # "custom" is Hermes's provider for self-hosted OpenAI-compatible endpoints.
+  # Aliases: "lmstudio", "ollama", "vllm", "llamacpp" all map to the same thing.
+  provider: "custom"
 
   # Nutanix Enterprise AI base URL. Do NOT include a trailing slash.
   # The OpenAI SDK appends /chat/completions automatically.
