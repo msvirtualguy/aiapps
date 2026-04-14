@@ -46,7 +46,41 @@ stringData:
   TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS}"
 
 ---
-# ── 3. ConfigMap (cli-config.yaml) ────────────────────────────────────────────
+# ── 3. ConfigMap (NAI self-signed CA certificate) ─────────────────────────────
+# Extracted from: openssl s_client -connect 192.168.160.202:443
+# Mounted at /etc/ssl/nai/ca.crt and trusted via SSL_CERT_FILE env var.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nai-ca-cert
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: tls
+data:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDGDCCAgCgAwIBAgIRAMYXuN5199PlAe6nsTvU2lwwDQYJKoZIhvcNAQELBQAw
+    GDEWMBQGA1UEAxMNcm9vdC1jYS5sb2NhbDAeFw0yNjA0MTMwMjI5NDBaFw0yNzA0
+    MTMwMjI5NDBaMAAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDus761
+    O0D7kk02TRkfoQ+ZmAmikLuwG5nf4a/5CrKRNAAolVHCA4l+X7kjed9AYWax1tBK
+    0K4mIPXBZrp4Do8DtHHx6gfq0X4IGiTAcnIB6773BApcJjlQDpGCsnWL/JHqQDtZ
+    SvLSchafB7hvIwsFkHpMqm/iM29Z2e3uRcBdRCWtXe4fhUFmVSWoQW8/bfHKnOJn
+    rIAkfgaPoudbx4aIAt7NkKpoYaC4ZDyDYXDxq80qV3v9IOsXbhTlkdinT0p4V0vI
+    B8VQ0x7ghaG6AvUehJQ996E2yxRiE+frN9wb9RYOKkbsJODqnOc10aruyEiQVqeL
+    r3qBpWL/Qaskee5BAgMBAAGjdTBzMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8E
+    AjAAMB8GA1UdIwQYMBaAFFm+tLpmd7k5zkEhdAUfgZm3nFW1MDIGA1UdEQEB/wQo
+    MCaCHioubmFpLXN5c3RlbS5zdmMuY2x1c3Rlci5sb2NhbIcEwKigyjANBgkqhkiG
+    9w0BAQsFAAOCAQEAhMKejL8la8CFKY2CnphyFpngc/nsV0KJrfbtNoUGVjTuf/DT
+    uzx/fcAARlv8UcCgKF8ZH8XjYGW7fN67rHu+Ex5fhv4Nlo4mkACMU75rhGNbDTBU
+    crsMwMfMQu9FCB61UhLjsmUIfBh+ExXksoZA7Vt1ztPA2S/uskT8Ve6PwftSXLok
+    7zqZcnaH/0sB3uSwMxEIHvRi4+5WO1O39yLJ7FFyPdJSkU/W7vHGv5Rk8R7Bm6VJ
+    iVeVZbo+Vxko1YvllJaCD+rAeskWwuL0mr9BqzeWj6B+R9dTXu7gWF5/yIW1qe5n
+    +/ZPbYkjEJqYJjwjw1wywBG7lEs1opLsWY5l4g==
+    -----END CERTIFICATE-----
+
+---
+# ── 4. ConfigMap (cli-config.yaml) ────────────────────────────────────────────
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -206,17 +240,14 @@ spec:
               value: /opt/data
             - name: PYTHONUNBUFFERED
               value: "1"
-            # Disable SSL verification for the NAI endpoint's self-signed cert.
-            # The OpenAI/httpx client respects these env vars natively.
-            - name: SSL_VERIFY
-              value: "false"
-            - name: HTTPX_VERIFY
-              value: "0"
-            # Prevent Python's requests/urllib from verifying certs too
-            - name: CURL_CA_BUNDLE
-              value: ""
+            # Trust the NAI self-signed CA cert.
+            # httpx, requests, and urllib all respect these env vars.
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/nai/ca.crt
             - name: REQUESTS_CA_BUNDLE
-              value: ""
+              value: /etc/ssl/nai/ca.crt
+            - name: CURL_CA_BUNDLE
+              value: /etc/ssl/nai/ca.crt
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -254,6 +285,9 @@ spec:
           volumeMounts:
             - name: hermes-data
               mountPath: /opt/data
+            - name: nai-ca-cert
+              mountPath: /etc/ssl/nai
+              readOnly: true
 
           livenessProbe:
             exec:
@@ -289,6 +323,9 @@ spec:
             items:
               - key: config.yaml
                 path: config.yaml
+        - name: nai-ca-cert
+          configMap:
+            name: nai-ca-cert
 
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
