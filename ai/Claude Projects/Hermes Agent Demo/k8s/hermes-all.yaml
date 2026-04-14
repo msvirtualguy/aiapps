@@ -152,11 +152,12 @@ spec:
         app.kubernetes.io/component: agent
     spec:
       securityContext:
-        # entrypoint.sh starts as root, creates dirs, then gosu-drops to hermes (UID 10000).
-        # Forcing runAsNonRoot here would prevent that privilege drop from working.
-        # fsGroup ensures the PVC is group-writable by UID 10000 after the drop.
+        # Start as hermes (UID 10000) directly so entrypoint.sh skips its
+        # root→hermes chown/gosu step — required because Nutanix Files NFS
+        # has root_squash, which blocks chown from a root container.
+        runAsUser: 10000
+        runAsGroup: 10000
         fsGroup: 10000
-        fsGroupChangePolicy: OnRootMismatch
 
       initContainers:
         - name: config-writer
