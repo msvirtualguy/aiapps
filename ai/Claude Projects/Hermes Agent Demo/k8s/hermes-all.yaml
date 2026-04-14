@@ -206,6 +206,17 @@ spec:
               value: /opt/data
             - name: PYTHONUNBUFFERED
               value: "1"
+            # Disable SSL verification for the NAI endpoint's self-signed cert.
+            # The OpenAI/httpx client respects these env vars natively.
+            - name: SSL_VERIFY
+              value: "false"
+            - name: HTTPX_VERIFY
+              value: "0"
+            # Prevent Python's requests/urllib from verifying certs too
+            - name: CURL_CA_BUNDLE
+              value: ""
+            - name: REQUESTS_CA_BUNDLE
+              value: ""
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
