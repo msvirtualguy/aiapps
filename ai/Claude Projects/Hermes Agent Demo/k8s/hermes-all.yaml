@@ -229,9 +229,10 @@ spec:
         # Start as hermes (UID 10000) directly so entrypoint.sh skips its
         # root→hermes chown/gosu step — required because Nutanix Files NFS
         # has root_squash, which blocks chown from a root container.
+        # fsGroup intentionally omitted: kubelet applyFSGroup runs as root and
+        # tries to chown the entire NFS mount, which root_squash also blocks.
         runAsUser: 10000
         runAsGroup: 10000
-        fsGroup: 10000
 
       initContainers:
         - name: config-writer
