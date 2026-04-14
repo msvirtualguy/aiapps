@@ -67,6 +67,9 @@ data:
       # To increase the real limit, raise max_model_len in the NAI console.
       context_length: 65536
       max_tokens: 4096
+      # Increase API request timeout (seconds). Default is ~90s which is too
+      # short if the NAI model is cold-loading on first request.
+      request_timeout: 300
 
     memory:
       memory_enabled: true
