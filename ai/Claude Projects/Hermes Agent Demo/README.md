@@ -200,6 +200,12 @@ cp config/.env.example config/.env.template
 | `TELEGRAM_BOT_TOKEN` | Bot token from [@BotFather](https://t.me/BotFather) |
 | `TELEGRAM_ALLOWED_USERS` | Comma-separated Telegram user IDs — find yours via [@userinfobot](https://t.me/userinfobot) |
 
+### Context Window Note
+
+Hermes Agent enforces a minimum context window of **64,000 tokens**. The config sets `context_length: 65536` as an override to satisfy this check. The actual usable context is bounded by whatever `max_model_len` is configured in the NAI model deployment — not this value.
+
+To increase real context capacity: in the NAI console, find the `gemma-4-e4b-it` deployment and raise `max_model_len`. A 4B parameter model in fp16 uses ~8GB VRAM on the RTX 4000 SFF Ada, leaving ~12GB headroom for context.
+
 > `config/.env.template` is gitignored and never committed. `config/.env.example` (placeholder values only) is the committed reference.
 
 ---
@@ -295,3 +301,4 @@ Hermes Agent Demo/
 | `invalid choice: 'telegram'` | Wrong gateway subcommand | Use `hermes gateway run` — platform selected by config, not arg |
 | `dial tcp 127.0.0.1:8080` | No kubeconfig loaded | Download from Rancher UI → set `KUBECONFIG` env var |
 | Config changes not picked up | Init container skips existing `config.yaml` | `kubectl exec ... -- rm /opt/data/config.yaml` then rollout restart |
+| `context window of X below minimum 64,000` | Hermes enforces a 64K minimum guard | Set `context_length: 65536` in config to bypass the check. Actual context is bounded by NAI's `max_model_len` — raise that in the NAI console for full capacity |
