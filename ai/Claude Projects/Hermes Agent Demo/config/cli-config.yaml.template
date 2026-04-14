@@ -1,0 +1,86 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Hermes Agent — cli-config.yaml template
+#
+# This file is the source of truth for the ConfigMap (k8s/configmap.yaml).
+# Edit here, then copy the content into the ConfigMap's data.config\.yaml field,
+# or run: kubectl create configmap hermes-config --from-file=config.yaml=config/cli-config.yaml.template
+#
+# Placeholder values marked with REPLACE_* must be substituted before deploy.
+# ──────────────────────────────────────────────────────────────────────────────
+
+model:
+  # NAI model name — must match the model ID registered in the NAI console.
+  # Examples: "gemma-4", "gemma-3-27b-it", "mistral-7b-instruct"
+  default: "gemma-4"
+
+  # "openai" provider works for any OpenAI-compatible endpoint.
+  provider: "openai"
+
+  # Nutanix Enterprise AI base URL. Do NOT include a trailing slash.
+  # The OpenAI SDK appends /chat/completions automatically.
+  base_url: "https://REPLACE_NAI_ENDPOINT/v1"
+
+  context_length: 8192
+  max_tokens: 2048
+
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200
+  user_char_limit: 1375
+
+terminal:
+  backend: "local"
+  timeout: 60
+
+gateway:
+  telegram:
+    enabled: true
+    # Token and allowed_users are read from the TELEGRAM_BOT_TOKEN and
+    # TELEGRAM_ALLOWED_USERS environment variables (injected from the K8s Secret).
+
+# ── MCP Tool Servers ─────────────────────────────────────────────────────────
+# Each entry spawns an MCP server as a stdio subprocess inside the Hermes pod.
+# The Hermes image ships with: uvx (Python MCP servers), npx (Node MCP servers).
+#
+# To add a new tool:
+#   1. Add an entry here
+#   2. Update k8s/configmap.yaml with the new config
+#   3. kubectl apply -f k8s/configmap.yaml
+#   4. kubectl rollout restart deployment/hermes -n hermes-agent
+# ─────────────────────────────────────────────────────────────────────────────
+mcp_servers:
+  # System clock and timezone queries
+  time:
+    command: uvx
+    args: ["mcp-server-time"]
+
+  # File read/write within the agent workspace on the Nutanix Files PVC
+  filesystem:
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "/opt/data/workspace"
+
+  # ── Additional MCP servers (examples — uncomment to enable) ──────────────
+
+  # Git operations (useful for code-related tasks)
+  # git:
+  #   command: uvx
+  #   args: ["mcp-server-git", "--repository", "/opt/data/workspace"]
+
+  # SQLite database access
+  # sqlite:
+  #   command: uvx
+  #   args: ["mcp-server-sqlite", "--db-path", "/opt/data/workspace/agent.db"]
+
+  # Fetch web pages
+  fetch:
+    command: uvx
+    args: ["mcp-server-fetch"]
+
+  # Kubernetes cluster access (requires KUBECONFIG in the Secret)
+  kubernetes:
+    command: npx
+    args: ["-y", "mcp-server-kubernetes"]

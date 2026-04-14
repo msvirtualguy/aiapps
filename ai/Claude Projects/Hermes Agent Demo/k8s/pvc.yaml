@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hermes-data
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: storage
+  annotations:
+    # Document the purpose of each subdirectory Hermes creates under /opt/data:
+    #   cron/        — scheduled automation tasks
+    #   sessions/    — session transcripts
+    #   logs/        — agent run logs
+    #   memories/    — persistent agent memory (FTS5 SQLite + summaries)
+    #   skills/      — learned and user-defined skills
+    #   workspace/   — MCP filesystem tool working directory
+    #   plans/       — agent-generated plans
+spec:
+  # ── StorageClass ──────────────────────────────────────────────────────────
+  # Set to your Nutanix Files CSI StorageClass name.
+  # Verify available classes with: kubectl get storageclass
+  # Common Nutanix Files CSI names: nutanix-dynamicfile, nutanix-file
+  storageClassName: nai-nfs-storage
+
+  accessModes:
+    - ReadWriteMany
+
+  resources:
+    requests:
+      # 10Gi covers skills, memories, logs, and workspace files for a demo.
+      # Increase for production use if sessions/logs are retained long-term.
+      storage: 50Gi

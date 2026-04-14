@@ -1,0 +1,69 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-network-policy
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      app: hermes
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # ── Ingress ──────────────────────────────────────────────────────────────
+  # Hermes uses outbound Telegram polling — no inbound connections required.
+  # Allow nothing inbound except for health probes from the kubelet (on-node,
+  # no NetworkPolicy enforcement needed for node-local probes).
+  ingress: []
+
+  # ── Egress ───────────────────────────────────────────────────────────────
+  egress:
+    # 1. DNS — required for all external hostname resolution.
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # 2. NAI Inference Endpoint (HTTPS) — scoped to the NAI subnet.
+    #    Replace REPLACE_NAI_CIDR with your NAI subnet (e.g. 192.168.160.0/24).
+    - ports:
+        - port: 443
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: REPLACE_NAI_CIDR
+
+    # 3. Telegram Bot API servers (official IP ranges, outbound long-polling).
+    - ports:
+        - port: 443
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 149.154.160.0/20
+        - ipBlock:
+            cidr: 91.108.4.0/22
+
+    # 4. npx/uvx package downloads for MCP server first-run.
+    #    Remove once MCP servers are pre-cached in a custom image.
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+
+    # 5. MCP tool servers run as stdio subprocesses — no network rule needed.
+    #    If you add an HTTP-transport MCP server as a separate K8s service,
+    #    add a podSelector rule here.

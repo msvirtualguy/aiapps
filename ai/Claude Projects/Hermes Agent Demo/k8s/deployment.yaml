@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: agent
+spec:
+  replicas: 1
+  # Telegram long-polling requires exactly one active replica.
+  # If you switch to webhook mode, replicas: 2+ is safe.
+  selector:
+    matchLabels:
+      app: hermes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: hermes
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/component: agent
+      annotations:
+        # Force pod replacement on ConfigMap change by hashing the config.
+        # Re-apply after editing configmap.yaml, or use: kubectl rollout restart deployment/hermes -n hermes-agent
+        kubectl.kubernetes.io/restartedAt: ""
+    spec:
+      # ── Security ──────────────────────────────────────────────────────────
+      securityContext:
+        # The Hermes image creates user hermes with UID 10000.
+        runAsUser: 10000
+        runAsNonRoot: true
+        # Ensure the PVC is group-writable by the hermes user.
+        fsGroup: 10000
+        fsGroupChangePolicy: OnRootMismatch
+
+      # ── Init Container ────────────────────────────────────────────────────
+      # Writes the ConfigMap-sourced config.yaml into the PVC before Hermes
+      # starts. This avoids a subPath mount conflict with the PVC root mount.
+      initContainers:
+        - name: config-writer
+          image: ghcr.io/nousresearch/hermes-agent:v0.9.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              # Only write if not already present, preserving any manual edits.
+              if [ ! -f /opt/data/config.yaml ]; then
+                cp /config-src/config.yaml /opt/data/config.yaml
+                echo "Wrote config.yaml to /opt/data"
+              else
+                echo "config.yaml already exists, skipping"
+              fi
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /opt/data
+            - name: hermes-config-src
+              mountPath: /config-src
+              readOnly: true
+          securityContext:
+            runAsUser: 10000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+
+      # ── Main Container ────────────────────────────────────────────────────
+      containers:
+        - name: hermes
+          image: ghcr.io/nousresearch/hermes-agent:v0.9.0
+          imagePullPolicy: IfNotPresent
+
+          # Start Hermes in Telegram gateway mode (outbound polling, no port needed).
+          command: ["hermes", "gateway", "telegram"]
+
+          env:
+            # HERMES_HOME tells the entrypoint and Hermes where to find/store data.
+            - name: HERMES_HOME
+              value: /opt/data
+            # Python output unbuffered — ensures logs appear in kubectl logs immediately.
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            # NAI inference API key — OpenAI SDK reads OPENAI_API_KEY natively.
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: OPENAI_API_KEY
+            # NAI base URL — OpenAI SDK reads OPENAI_BASE_URL natively,
+            # overriding the base_url set in cli-config.yaml.
+            - name: OPENAI_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: OPENAI_BASE_URL
+            # Model name forwarded to Hermes. Hermes reads HERMES_MODEL to
+            # override the model.default value in cli-config.yaml.
+            - name: HERMES_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: NAI_MODEL
+            # Telegram credentials — read by the Hermes gateway directly.
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: TELEGRAM_ALLOWED_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: TELEGRAM_ALLOWED_USERS
+
+          # ── Resources ─────────────────────────────────────────────────────
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          # ── Volume Mounts ──────────────────────────────────────────────────
+          volumeMounts:
+            # Persistent data: memory, skills, sessions, logs, workspace.
+            - name: hermes-data
+              mountPath: /opt/data
+
+          # ── Probes ────────────────────────────────────────────────────────
+          # Hermes does not expose an HTTP port; use a process-level check.
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "pgrep -f 'hermes gateway' > /dev/null"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "pgrep -f 'hermes gateway' > /dev/null"
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 2
+
+          # ── Security ──────────────────────────────────────────────────────
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Capabilities: drop all; Hermes needs none.
+            capabilities:
+              drop:
+                - ALL
+
+      # ── Volumes ───────────────────────────────────────────────────────────
+      volumes:
+        # Nutanix Files CSI persistent storage — all Hermes runtime data.
+        - name: hermes-data
+          persistentVolumeClaim:
+            claimName: hermes-data
+
+        # ConfigMap source for the init container config-writer.
+        - name: hermes-config-src
+          configMap:
+            name: hermes-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+
+      # ── Scheduling ────────────────────────────────────────────────────────
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30

@@ -1,0 +1,19 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: hermes-pdb
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: availability
+spec:
+  # Ensures at least one Hermes pod is always available during:
+  #   - Node drains (kubectl drain)
+  #   - Cluster upgrades
+  #   - Rolling restarts
+  # Because Telegram polling requires exactly one active replica, this
+  # prevents the cluster from evicting the pod without a replacement ready.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: hermes

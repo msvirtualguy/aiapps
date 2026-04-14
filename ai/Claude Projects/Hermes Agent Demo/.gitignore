@@ -1,0 +1,8 @@
+# ── Credential-bearing files — never commit ───────────────────────────────────
+k8s/hermes-all.yaml
+config/.env.template
+
+# ── Runtime / editor artifacts ────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.DS_Store

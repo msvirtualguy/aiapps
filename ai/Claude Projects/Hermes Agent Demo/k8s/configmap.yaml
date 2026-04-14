@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-config
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: config
+data:
+  # ────────────────────────────────────────────────────────────────────────────
+  # cli-config.yaml
+  #
+  # Mounted by an init container at /opt/data/config.yaml before Hermes starts.
+  # Edit this ConfigMap to change model, memory, MCP servers, or gateway config.
+  # After editing: kubectl rollout restart deployment/hermes -n hermes-agent
+  # ────────────────────────────────────────────────────────────────────────────
+  config.yaml: |
+    model:
+      # Model name fallback — overridden at runtime by the HERMES_MODEL env var
+      # (sourced from the NAI_MODEL key in hermes-secrets).
+      default: "gemma-4"
+
+      # "openai" provider works for any OpenAI-compatible endpoint.
+      provider: "openai"
+
+      # base_url fallback — overridden at runtime by the OPENAI_BASE_URL env var
+      # (sourced from the OPENAI_BASE_URL key in hermes-secrets).
+      # The OpenAI SDK reads OPENAI_BASE_URL natively; this value is only used
+      # if the env var is absent.
+      base_url: "https://REPLACE_NAI_ENDPOINT/v1"
+
+      context_length: 8192
+      max_tokens: 2048
+
+    memory:
+      memory_enabled: true
+      user_profile_enabled: true
+      # Max characters stored in agent's rolling memory block.
+      memory_char_limit: 2200
+      # Max characters stored per-user profile.
+      user_char_limit: 1375
+
+    terminal:
+      # "local" runs shell commands inside the container.
+      # The Hermes image already includes bash, python, node, uv/uvx.
+      backend: "local"
+      timeout: 60
+
+    gateway:
+      telegram:
+        enabled: true
+        # TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USERS are injected from the
+        # hermes-secrets Secret as environment variables — do not set them here.
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # MCP Tool Servers
+    #
+    # Each entry spawns the MCP server as a stdio subprocess inside the
+    # Hermes container. The Hermes image ships with uvx (Python) and npx (Node)
+    # so no extra images are needed.
+    #
+    # To add a new tool on the fly:
+    #   1. Add an entry below
+    #   2. kubectl apply -f k8s/configmap.yaml
+    #   3. kubectl rollout restart deployment/hermes -n hermes-agent
+    # ──────────────────────────────────────────────────────────────────────────
+    mcp_servers:
+      # System clock and timezone queries
+      time:
+        command: uvx
+        args: ["mcp-server-time"]
+
+      # Read/write access to the agent's workspace directory on the PVC
+      filesystem:
+        command: npx
+        args:
+          - "-y"
+          - "@modelcontextprotocol/server-filesystem"
+          - "/opt/data/workspace"
