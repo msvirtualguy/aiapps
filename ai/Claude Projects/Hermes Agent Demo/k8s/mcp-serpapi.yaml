@@ -6,13 +6,16 @@
 #
 # Prerequisites:
 #   1. Add SERPAPI_API_KEY to config/.env.template
-#   2. Re-run deploy.sh to update hermes-secrets with the new key
-#   3. kubectl apply -f k8s/mcp-serpapi.yaml
+#   2. Run: bash deploy.sh              (pushes key into hermes-secrets)
+#   3. Run: kubectl apply -f k8s/mcp-serpapi.yaml
 #
-# Hermes config entry (already added to configmap.yaml / hermes-all.yaml):
+# Hermes config entry (already in configmap.yaml / hermes-all.yaml):
 #   mcp_servers:
 #     serpapi:
 #       url: "http://mcp-serpapi:3000/sse"
+#
+# Auth: ClusterIP service — only reachable from within the cluster.
+# The SERPAPI_API_KEY (to call SerpAPI's API) is injected from hermes-secrets.
 # ══════════════════════════════════════════════════════════════════════════════
 
 ---
@@ -36,20 +39,10 @@ spec:
         app.kubernetes.io/name: hermes-agent
         app.kubernetes.io/component: mcp-serpapi
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
-        runAsGroup: 1000
-
       containers:
         - name: mcp-serpapi
           image: node:20-alpine
-          # npx downloads and runs the SerpAPI MCP server on first start.
-          # The server listens for SSE connections on PORT (default 3000).
-          command:
-            - npx
-            - "-y"
-            - "@agentic/mcp-server-serpapi"
+          command: ["npx", "-y", "@agentic/mcp-server-serpapi"]
           env:
             - name: PORT
               value: "3000"
@@ -58,12 +51,10 @@ spec:
                 secretKeyRef:
                   name: hermes-secrets
                   key: SERPAPI_API_KEY
-
           ports:
             - name: sse
               containerPort: 3000
               protocol: TCP
-
           resources:
             requests:
               cpu: 100m
@@ -71,15 +62,12 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
-
           readinessProbe:
-            httpGet:
-              path: /sse
+            tcpSocket:
               port: 3000
             initialDelaySeconds: 15
             periodSeconds: 10
             failureThreshold: 3
-
           securityContext:
             allowPrivilegeEscalation: false
 
