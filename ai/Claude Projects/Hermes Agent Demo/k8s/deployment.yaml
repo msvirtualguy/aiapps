@@ -45,12 +45,13 @@ spec:
         - name: config-writer
           image: nousresearch/hermes-agent:latest
           imagePullPolicy: Always
+          # command overrides ENTRYPOINT for this init container — correct here
+          # since we just need a shell to seed the config, not the hermes entrypoint.
           command:
-            - sh
+            - /bin/sh
             - -c
             - |
               set -e
-              # Only write if not already present, preserving any manual edits.
               if [ ! -f /opt/data/config.yaml ]; then
                 cp /config-src/config.yaml /opt/data/config.yaml
                 echo "Wrote config.yaml to /opt/data"
@@ -74,8 +75,9 @@ spec:
           image: nousresearch/hermes-agent:latest
           imagePullPolicy: Always
 
-          # Start Hermes in Telegram gateway mode (outbound polling, no port needed).
-          command: ["hermes", "gateway", "telegram"]
+          # Use args (not command) so the Docker ENTRYPOINT is preserved.
+          # entrypoint.sh sets up dirs, drops privileges, then runs: hermes "$@"
+          args: ["gateway", "telegram"]
 
           env:
             # HERMES_HOME tells the entrypoint and Hermes where to find/store data.
