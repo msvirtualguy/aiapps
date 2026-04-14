@@ -170,9 +170,12 @@ data:
         command: uvx
         args: ["mcp-server-fetch"]
 
-      kubernetes:
-        command: npx
-        args: ["-y", "mcp-server-kubernetes"]
+      # kubernetes MCP server disabled — its 15+ tool schemas add ~4K tokens to
+      # every request, which overwhelms small models (4B params) and causes timeouts.
+      # Re-enable only when the model deployment has sufficient context headroom.
+      # kubernetes:
+      #   command: npx
+      #   args: ["-y", "mcp-server-kubernetes"]
 
 ---
 # ── 4. PersistentVolumeClaim (Nutanix Files CSI) ──────────────────────────────
@@ -271,12 +274,22 @@ spec:
               value: /opt/data
             - name: PYTHONUNBUFFERED
               value: "1"
+            # OpenAI SDK native timeout — overrides Hermes's hardcoded default.
+            # Set high so slow NAI cold-starts don't time out.
+            - name: OPENAI_TIMEOUT
+              value: "600"
             # Patch Python's ssl module at startup to disable cert verification.
             # Covers httpx (Telegram + NAI), requests, and urllib uniformly.
             # Root cause: cluster SSL inspection proxy uses root-ca.local which
             # we don't have. Proper fix: mount root-ca.local from Nutanix Prism.
             - name: PYTHONPATH
               value: /opt/ssl-patch
+            # Persist MCP package caches on the PVC so uvx/npx don't
+            # re-download on every pod restart.
+            - name: UV_CACHE_DIR
+              value: /opt/data/.cache/uv
+            - name: npm_config_cache
+              value: /opt/data/.cache/npm
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
