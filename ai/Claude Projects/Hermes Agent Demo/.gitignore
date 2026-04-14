@@ -1,5 +1,5 @@
 # ── Credential-bearing files — never commit ───────────────────────────────────
-k8s/hermes-all.yaml
+# .env.template holds real values populated from .env.example
 config/.env.template
 
 # ── Runtime / editor artifacts ────────────────────────────────────────────────

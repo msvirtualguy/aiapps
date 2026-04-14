@@ -1,0 +1,368 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Hermes Agent — consolidated deployment manifest (envsubst template)
+#
+# This file uses ${VAR} placeholders populated from config/.env.template at
+# deploy time. Never contains real credentials — safe to commit.
+#
+# Deploy:
+#   set -a && source config/.env.template && set +a
+#   envsubst < k8s/hermes-all.yaml | kubectl apply -f -
+#
+# Or use the helper script:
+#   bash deploy.sh
+#
+# Day-2 operations:
+#   Restart: kubectl rollout restart deployment/hermes -n hermes-agent
+#   Logs:    kubectl logs -n hermes-agent deploy/hermes -f
+#   Shell:   kubectl exec -it -n hermes-agent deploy/hermes -- hermes
+# ══════════════════════════════════════════════════════════════════════════════
+
+---
+# ── 1. Namespace ──────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/part-of: hermes-agent
+
+---
+# ── 2. Secret ─────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hermes-secrets
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: config
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "${OPENAI_API_KEY}"
+  OPENAI_BASE_URL: "${OPENAI_BASE_URL}"
+  NAI_MODEL: "${NAI_MODEL}"
+  TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+  TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS}"
+
+---
+# ── 3. ConfigMap (cli-config.yaml) ────────────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-config
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: config
+data:
+  config.yaml: |
+    model:
+      # Fallback values — overridden at runtime by HERMES_MODEL and OPENAI_BASE_URL env vars
+      default: "${NAI_MODEL}"
+      provider: "openai"
+      base_url: "${OPENAI_BASE_URL}"
+      context_length: 8192
+      max_tokens: 2048
+
+    memory:
+      memory_enabled: true
+      user_profile_enabled: true
+      memory_char_limit: 2200
+      user_char_limit: 1375
+
+    terminal:
+      backend: "local"
+      timeout: 60
+
+    gateway:
+      telegram:
+        enabled: true
+        # TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USERS injected from hermes-secrets
+
+    # ── MCP Tool Servers ──────────────────────────────────────────────────────
+    # Each entry spawns an MCP server as a stdio subprocess inside the Hermes pod.
+    # To add a tool: add an entry here, re-run deploy.sh, then kubectl rollout restart.
+    mcp_servers:
+      time:
+        command: uvx
+        args: ["mcp-server-time"]
+
+      filesystem:
+        command: npx
+        args:
+          - "-y"
+          - "@modelcontextprotocol/server-filesystem"
+          - "/opt/data/workspace"
+
+      fetch:
+        command: uvx
+        args: ["mcp-server-fetch"]
+
+      kubernetes:
+        command: npx
+        args: ["-y", "mcp-server-kubernetes"]
+
+---
+# ── 4. PersistentVolumeClaim (Nutanix Files CSI) ──────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hermes-data
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: storage
+  annotations:
+    # Subdirectories Hermes creates under /opt/data:
+    #   cron/ sessions/ logs/ memories/ skills/ workspace/ plans/
+spec:
+  storageClassName: nai-nfs-storage
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+
+---
+# ── 5. Deployment ─────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hermes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: hermes
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/component: agent
+    spec:
+      securityContext:
+        runAsUser: 10000
+        runAsNonRoot: true
+        fsGroup: 10000
+        fsGroupChangePolicy: OnRootMismatch
+
+      initContainers:
+        - name: config-writer
+          image: ghcr.io/nousresearch/hermes-agent:v0.9.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              if [ ! -f /opt/data/config.yaml ]; then
+                cp /config-src/config.yaml /opt/data/config.yaml
+                echo "Wrote config.yaml to /opt/data"
+              else
+                echo "config.yaml already exists, skipping"
+              fi
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /opt/data
+            - name: hermes-config-src
+              mountPath: /config-src
+              readOnly: true
+          securityContext:
+            runAsUser: 10000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+
+      containers:
+        - name: hermes
+          image: ghcr.io/nousresearch/hermes-agent:v0.9.0
+          imagePullPolicy: IfNotPresent
+          command: ["hermes", "gateway", "telegram"]
+
+          env:
+            - name: HERMES_HOME
+              value: /opt/data
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: OPENAI_API_KEY
+            - name: OPENAI_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: OPENAI_BASE_URL
+            - name: HERMES_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: NAI_MODEL
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: TELEGRAM_ALLOWED_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: TELEGRAM_ALLOWED_USERS
+
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          volumeMounts:
+            - name: hermes-data
+              mountPath: /opt/data
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "pgrep -f 'hermes gateway' > /dev/null"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - "pgrep -f 'hermes gateway' > /dev/null"
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 2
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+      volumes:
+        - name: hermes-data
+          persistentVolumeClaim:
+            claimName: hermes-data
+        - name: hermes-config-src
+          configMap:
+            name: hermes-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+# ── 6. Service ────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: agent
+spec:
+  type: ClusterIP
+  selector:
+    app: hermes
+  ports:
+    - name: health
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+
+---
+# ── 7. NetworkPolicy ──────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-network-policy
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: network
+spec:
+  podSelector:
+    matchLabels:
+      app: hermes
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    # 1. DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+
+    # 2. NAI Inference Endpoint — scoped to NAI subnet
+    - ports:
+        - port: 443
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 192.168.160.0/24
+
+    # 3. Telegram Bot API servers (official IP ranges)
+    - ports:
+        - port: 443
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 149.154.160.0/20
+        - ipBlock:
+            cidr: 91.108.4.0/22
+
+    # 4. npx/uvx package downloads for MCP server first-run
+    #    Remove once MCP servers are pre-cached in a custom image.
+    - ports:
+        - port: 443
+          protocol: TCP
+        - port: 80
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+
+---
+# ── 8. PodDisruptionBudget ────────────────────────────────────────────────────
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: hermes-pdb
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: availability
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: hermes
