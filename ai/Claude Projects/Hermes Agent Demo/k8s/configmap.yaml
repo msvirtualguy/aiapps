@@ -88,10 +88,8 @@ data:
         command: uvx
         args: ["mcp-server-fetch"]
 
-      # SerpAPI web search — HTTP/SSE transport (runs as a separate pod)
-      # Deploy k8s/mcp-serpapi.yaml and add SERPAPI_API_KEY to hermes-secrets.
-      serpapi:
-        url: "http://mcp-serpapi:3000/sse"
+      # SerpAPI web search — handled by NAI 2.6 MCP connector, not Hermes directly.
+      # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
 
       # kubernetes MCP disabled — too many tool schemas (15+) overwhelm 4B models
       # kubernetes:

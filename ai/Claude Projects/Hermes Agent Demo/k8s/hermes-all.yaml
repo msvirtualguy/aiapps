@@ -171,11 +171,9 @@ data:
         command: uvx
         args: ["mcp-server-fetch"]
 
-      # SerpAPI web search — hosted MCP server (no separate pod needed).
-      # Auth: SERPAPI_API_KEY embedded in URL path.
-      # Docs: https://serpapi.com/mcp
-      serpapi:
-        url: "https://mcp.serpapi.com/${SERPAPI_API_KEY}/mcp"
+      # SerpAPI web search — handled by NAI 2.6 MCP connector, not Hermes directly.
+      # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
+      # Configure the connector in the NAI console under Tools → MCP Servers.
 
       # kubernetes MCP server disabled — its 15+ tool schemas add ~4K tokens to
       # every request, which overwhelms small models (4B params) and causes timeouts.

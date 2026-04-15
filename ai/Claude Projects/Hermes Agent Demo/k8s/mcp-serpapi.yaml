@@ -1,0 +1,136 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# SerpAPI MCP Server — official serpapi-mcp (github.com/serpapi/serpapi-mcp)
+#
+# Exposes the SerpAPI MCP server over Streamable HTTP on port 8000.
+# Designed to be registered in NAI 2.6 as an MCP connector.
+#
+# NAI 2.6 MCP Connector configuration:
+#   URL: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<SERPAPI_API_KEY>/mcp
+#   (the API key is embedded in the URL path — no separate auth header needed)
+#
+# Deploy:
+#   bash deploy.sh                          # ensures SERPAPI_API_KEY is in hermes-secrets
+#   kubectl apply -f k8s/mcp-serpapi.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-serpapi
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-serpapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-serpapi
+  template:
+    metadata:
+      labels:
+        app: mcp-serpapi
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/component: mcp-serpapi
+    spec:
+      initContainers:
+        # Downloads and installs serpapi-mcp source on first start.
+        # Uses Python urllib (not git/curl) so the cluster SSL proxy is handled
+        # by the same ssl patch used for the Hermes container.
+        - name: install
+          image: python:3.13-slim
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              if [ -f /app/pyproject.toml ]; then
+                echo "serpapi-mcp already installed, skipping"
+                exit 0
+              fi
+              echo "Downloading serpapi-mcp source..."
+              python3 -c "
+              import urllib.request, ssl
+              ctx = ssl._create_unverified_context()
+              urllib.request.urlretrieve(
+                'https://github.com/serpapi/serpapi-mcp/archive/refs/heads/main.tar.gz',
+                '/tmp/serpapi-mcp.tar.gz',
+                context=ctx
+              )
+              "
+              tar xz -C /app --strip-components=1 -f /tmp/serpapi-mcp.tar.gz
+              echo "Installing uv..."
+              pip install --quiet uv
+              echo "Installing dependencies..."
+              cd /app && uv sync --frozen
+              echo "Install complete"
+          volumeMounts:
+            - name: app
+              mountPath: /app
+
+      containers:
+        - name: mcp-serpapi
+          image: python:3.13-slim
+          command:
+            - sh
+            - -c
+            - |
+              pip install --quiet uv
+              cd /app && exec uv run src/server.py
+          env:
+            - name: PORT
+              value: "8000"
+            - name: SERPAPI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: SERPAPI_API_KEY
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          volumeMounts:
+            - name: app
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+
+      volumes:
+        - name: app
+          emptyDir: {}
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-serpapi
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-serpapi
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-serpapi
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
