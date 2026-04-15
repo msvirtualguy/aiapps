@@ -70,6 +70,15 @@ metadata:
     app.kubernetes.io/component: mcp-serpapi
 data:
   default.conf: |
+    # POST → application/json (Streamable HTTP MCP request/response)
+    # GET  → text/event-stream (SSE channel for server-to-client notifications)
+    # other → pass through unchanged
+    map $request_method $mcp_accept {
+        POST    "application/json";
+        GET     "text/event-stream";
+        default "";
+    }
+
     server {
         listen      443 ssl;
         server_name _;
@@ -78,15 +87,11 @@ data:
         ssl_certificate_key /certs/key.pem;
         ssl_protocols       TLSv1.2 TLSv1.3;
 
-        # Close connections after each response so MCP clients that wait
-        # for EOF (rather than trusting Content-Length) complete correctly.
-        keepalive_timeout   0;
-
         location / {
             proxy_pass         http://127.0.0.1:8000;
             proxy_http_version 1.1;
             proxy_set_header   Connection   '';
-            proxy_set_header   Accept       'application/json';
+            proxy_set_header   Accept       $mcp_accept;
             proxy_buffering    off;
             proxy_cache        off;
             proxy_read_timeout 3600s;
