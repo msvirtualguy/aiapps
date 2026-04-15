@@ -35,6 +35,10 @@ data:
         ssl_certificate_key /certs/key.pem;
         ssl_protocols       TLSv1.2 TLSv1.3;
 
+        # Close connections after each response so MCP clients that wait
+        # for EOF (rather than trusting Content-Length) complete correctly.
+        keepalive_timeout   0;
+
         location / {
             proxy_pass         http://127.0.0.1:8000;
             proxy_http_version 1.1;
