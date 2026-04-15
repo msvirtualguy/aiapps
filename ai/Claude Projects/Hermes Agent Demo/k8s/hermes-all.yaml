@@ -45,7 +45,6 @@ stringData:
   TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
   TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS}"
   SERPAPI_API_KEY: "${SERPAPI_API_KEY}"
-  MCP_SERPAPI_TOKEN: "${MCP_SERPAPI_TOKEN}"
 
 ---
 # ── 3. ConfigMap (NAI self-signed CA certificate) ─────────────────────────────
@@ -172,11 +171,11 @@ data:
         command: uvx
         args: ["mcp-server-fetch"]
 
-      # SerpAPI web search — HTTP/SSE transport (external pod, not stdio)
+      # SerpAPI web search — hosted MCP server (no separate pod needed).
+      # Auth: SERPAPI_API_KEY embedded in URL path.
+      # Docs: https://serpapi.com/mcp
       serpapi:
-        url: "http://mcp-serpapi:3000/sse"
-        headers:
-          Authorization: "Bearer ${MCP_SERPAPI_TOKEN}"
+        url: "https://mcp.serpapi.com/${SERPAPI_API_KEY}/mcp"
 
       # kubernetes MCP server disabled — its 15+ tool schemas add ~4K tokens to
       # every request, which overwhelms small models (4B params) and causes timeouts.
