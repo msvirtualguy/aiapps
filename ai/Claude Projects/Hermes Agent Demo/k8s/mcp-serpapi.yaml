@@ -51,6 +51,12 @@ spec:
                 secretKeyRef:
                   name: hermes-secrets
                   key: SERPAPI_API_KEY
+            # Bearer token clients must send as: Authorization: Bearer <token>
+            - name: MCP_SERPAPI_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: MCP_SERPAPI_TOKEN
           ports:
             - name: sse
               containerPort: 3000
