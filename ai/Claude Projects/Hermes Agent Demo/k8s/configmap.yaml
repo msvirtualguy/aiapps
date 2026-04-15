@@ -84,11 +84,13 @@ data:
           - "@modelcontextprotocol/server-filesystem"
           - "/opt/data/workspace"
 
-      fetch:
-        command: uvx
-        args: ["mcp-server-fetch"]
+      # SerpAPI web search — Hermes connects directly to the NAI MCP connector endpoint.
+      serpapi:
+        url: "https://192.168.160.202/enterpriseai/mcp/hermes-mcp-serpapi"
+        headers:
+          Authorization: "Bearer ${NAI_MCP_KEY}"
 
-      # SerpAPI web search — handled by NAI 2.6 MCP connector, not Hermes directly.
+      # fetch removed — web access now handled by SerpAPI above.
       # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
 
       # kubernetes MCP disabled — too many tool schemas (15+) overwhelm 4B models

@@ -45,6 +45,7 @@ stringData:
   TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
   TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS}"
   SERPAPI_API_KEY: "${SERPAPI_API_KEY}"
+  NAI_MCP_KEY: "${NAI_MCP_KEY}"
 
 ---
 # ── 3. ConfigMap (NAI self-signed CA certificate) ─────────────────────────────
@@ -167,11 +168,14 @@ data:
           - "@modelcontextprotocol/server-filesystem"
           - "/opt/data/workspace"
 
-      fetch:
-        command: uvx
-        args: ["mcp-server-fetch"]
+      # SerpAPI web search — Hermes connects directly to the NAI MCP connector endpoint.
+      # NAI handles routing to the mcp-serpapi pod; the MCP key authenticates access.
+      serpapi:
+        url: "https://192.168.160.202/enterpriseai/mcp/hermes-mcp-serpapi"
+        headers:
+          Authorization: "Bearer ${NAI_MCP_KEY}"
 
-      # SerpAPI web search — handled by NAI 2.6 MCP connector, not Hermes directly.
+      # fetch removed — web access now handled by SerpAPI above.
       # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
       # Configure the connector in the NAI console under Tools → MCP Servers.
 
@@ -321,6 +325,11 @@ spec:
                 secretKeyRef:
                   name: hermes-secrets
                   key: TELEGRAM_ALLOWED_USERS
+            - name: NAI_MCP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: NAI_MCP_KEY
 
           resources:
             requests:
