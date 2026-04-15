@@ -1,17 +1,49 @@
 # ══════════════════════════════════════════════════════════════════════════════
 # SerpAPI MCP Server — official serpapi-mcp (github.com/serpapi/serpapi-mcp)
 #
-# Exposes the SerpAPI MCP server over Streamable HTTP on port 8000.
-# Designed to be registered in NAI 2.6 as an MCP connector.
+# Exposes the SerpAPI MCP server over HTTPS on port 443.
+# TLS is terminated by an nginx sidecar using a self-signed cert generated
+# at pod startup. The MCP server itself runs HTTP on localhost:8000.
 #
 # NAI 2.6 MCP Connector configuration:
-#   URL: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<SERPAPI_API_KEY>/mcp
-#   (the API key is embedded in the URL path — no separate auth header needed)
+#   URL:     https://mcp-serpapi.hermes-agent.svc.cluster.local/<SERPAPI_API_KEY>/mcp
+#   Auth:    API key embedded in URL path (no separate header needed)
+#   TLS:     self-signed — disable cert verification in NAI connector settings
 #
 # Deploy:
 #   bash deploy.sh                          # ensures SERPAPI_API_KEY is in hermes-secrets
 #   kubectl apply -f k8s/mcp-serpapi.yaml
 # ══════════════════════════════════════════════════════════════════════════════
+
+---
+# ── ConfigMap: nginx TLS-termination config ───────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-serpapi-nginx
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-serpapi
+data:
+  default.conf: |
+    server {
+        listen      443 ssl;
+        server_name _;
+
+        ssl_certificate     /certs/cert.pem;
+        ssl_certificate_key /certs/key.pem;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        location / {
+            proxy_pass         http://localhost:8000;
+            proxy_http_version 1.1;
+            proxy_set_header   Connection   '';
+            proxy_buffering    off;
+            proxy_cache        off;
+            proxy_read_timeout 3600s;
+        }
+    }
 
 ---
 apiVersion: apps/v1
@@ -35,9 +67,24 @@ spec:
         app.kubernetes.io/component: mcp-serpapi
     spec:
       initContainers:
-        # Downloads and installs serpapi-mcp source on first start.
-        # Uses Python urllib (not git/curl) so the cluster SSL proxy is handled
-        # by the same ssl patch used for the Hermes container.
+
+        # ── 1. Generate self-signed TLS certificate ─────────────────────────
+        - name: gen-cert
+          image: nginx:alpine
+          command:
+            - sh
+            - -c
+            - |
+              openssl req -x509 -newkey rsa:2048 -keyout /certs/key.pem -out /certs/cert.pem \
+                -days 3650 -nodes \
+                -subj "/CN=mcp-serpapi.hermes-agent.svc.cluster.local" \
+                -addext "subjectAltName=DNS:mcp-serpapi,DNS:mcp-serpapi.hermes-agent,DNS:mcp-serpapi.hermes-agent.svc.cluster.local"
+              echo "TLS cert generated"
+          volumeMounts:
+            - name: certs
+              mountPath: /certs
+
+        # ── 2. Download and install serpapi-mcp source ──────────────────────
         - name: install
           image: python:3.13-slim
           command:
@@ -58,9 +105,7 @@ spec:
                   f.write(r.read())
               "
               tar xz -C /app --strip-components=1 -f /tmp/serpapi-mcp.tar.gz
-              echo "Installing uv..."
               pip install --quiet uv
-              echo "Installing dependencies..."
               cd /app && uv sync --frozen
               echo "Install complete"
           volumeMounts:
@@ -68,6 +113,8 @@ spec:
               mountPath: /app
 
       containers:
+
+        # ── 1. SerpAPI MCP server (HTTP, localhost:8000) ────────────────────
         - name: mcp-serpapi
           image: python:3.13-slim
           command:
@@ -84,10 +131,6 @@ spec:
                 secretKeyRef:
                   name: hermes-secrets
                   key: SERPAPI_API_KEY
-          ports:
-            - name: http
-              containerPort: 8000
-              protocol: TCP
           volumeMounts:
             - name: app
               mountPath: /app
@@ -98,10 +141,34 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+
+        # ── 2. nginx TLS termination (HTTPS:443 → HTTP:8000) ────────────────
+        - name: nginx-tls
+          image: nginx:alpine
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - name: certs
+              mountPath: /certs
+              readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
           readinessProbe:
             tcpSocket:
-              port: 8000
-            initialDelaySeconds: 30
+              port: 443
+            initialDelaySeconds: 15
             periodSeconds: 10
             failureThreshold: 5
           securityContext:
@@ -110,6 +177,11 @@ spec:
       volumes:
         - name: app
           emptyDir: {}
+        - name: certs
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: mcp-serpapi-nginx
 
       restartPolicy: Always
       terminationGracePeriodSeconds: 10
@@ -128,7 +200,7 @@ spec:
   selector:
     app: mcp-serpapi
   ports:
-    - name: http
-      port: 8000
-      targetPort: 8000
+    - name: https
+      port: 443
+      targetPort: 443
       protocol: TCP
