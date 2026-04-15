@@ -2,18 +2,61 @@
 # SerpAPI MCP Server — official serpapi-mcp (github.com/serpapi/serpapi-mcp)
 #
 # Exposes the SerpAPI MCP server over HTTPS on port 443.
-# TLS is terminated by an nginx sidecar using a self-signed cert generated
-# at pod startup. The MCP server itself runs HTTP on localhost:8000.
+# TLS is terminated by an nginx sidecar using a cert issued by cert-manager
+# signed by root-ca.local (the cluster CA trusted by NAI's system CA bundle).
+#
+# Prerequisites (one-time):
+#   kubectl get secret ca-key-pair -n nai-system -o json | \
+#     jq 'del(.metadata.namespace,.metadata.resourceVersion,.metadata.uid,
+#             .metadata.creationTimestamp,.metadata.managedFields)
+#         | .metadata.namespace = "hermes-agent"' | \
+#     kubectl apply -f -
 #
 # NAI 2.6 MCP Connector configuration:
 #   URL:     https://mcp-serpapi.hermes-agent.svc.cluster.local/<SERPAPI_API_KEY>/mcp
 #   Auth:    API key embedded in URL path (no separate header needed)
-#   TLS:     self-signed — disable cert verification in NAI connector settings
+#   TLS:     cert signed by root-ca.local — no special settings needed
 #
 # Deploy:
 #   bash deploy.sh                          # ensures SERPAPI_API_KEY is in hermes-secrets
 #   kubectl apply -f k8s/mcp-serpapi.yaml
 # ══════════════════════════════════════════════════════════════════════════════
+
+---
+# ── Issuer: root-ca.local (copied from nai-system/ca-key-pair) ───────────────
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: nai-ca-issuer
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-serpapi
+spec:
+  ca:
+    secretName: ca-key-pair
+
+---
+# ── Certificate: signed by root-ca.local, trusted by NAI ─────────────────────
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mcp-serpapi-tls
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-serpapi
+spec:
+  secretName: mcp-serpapi-tls
+  issuerRef:
+    name: nai-ca-issuer
+    kind: Issuer
+  dnsNames:
+    - mcp-serpapi
+    - mcp-serpapi.hermes-agent
+    - mcp-serpapi.hermes-agent.svc.cluster.local
+  duration: 8760h
+  renewBefore: 720h
 
 ---
 # ── ConfigMap: nginx TLS-termination config ───────────────────────────────────
@@ -73,25 +116,7 @@ spec:
     spec:
       initContainers:
 
-        # ── 1. Generate self-signed TLS certificate ─────────────────────────
-        - name: gen-cert
-          image: alpine:3.19
-          command:
-            - sh
-            - -c
-            - |
-              set -e
-              apk add --no-cache openssl
-              openssl req -x509 -newkey rsa:2048 -keyout /certs/key.pem -out /certs/cert.pem \
-                -days 3650 -nodes \
-                -subj "/CN=mcp-serpapi.hermes-agent.svc.cluster.local" \
-                -addext "subjectAltName=DNS:mcp-serpapi,DNS:mcp-serpapi.hermes-agent,DNS:mcp-serpapi.hermes-agent.svc.cluster.local"
-              echo "TLS cert generated"
-          volumeMounts:
-            - name: certs
-              mountPath: /certs
-
-        # ── 2. Download and install serpapi-mcp source ──────────────────────
+        # ── 1. Download and install serpapi-mcp source ──────────────────────
         - name: install
           image: python:3.13-slim
           command:
@@ -185,7 +210,13 @@ spec:
         - name: app
           emptyDir: {}
         - name: certs
-          emptyDir: {}
+          secret:
+            secretName: mcp-serpapi-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
         - name: nginx-config
           configMap:
             name: mcp-serpapi-nginx
