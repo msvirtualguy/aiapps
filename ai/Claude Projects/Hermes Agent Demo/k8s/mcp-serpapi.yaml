@@ -53,11 +53,9 @@ spec:
               python3 -c "
               import urllib.request, ssl
               ctx = ssl._create_unverified_context()
-              urllib.request.urlretrieve(
-                'https://github.com/serpapi/serpapi-mcp/archive/refs/heads/main.tar.gz',
-                '/tmp/serpapi-mcp.tar.gz',
-                context=ctx
-              )
+              req = urllib.request.Request('https://github.com/serpapi/serpapi-mcp/archive/refs/heads/main.tar.gz')
+              with urllib.request.urlopen(req, context=ctx) as r, open('/tmp/serpapi-mcp.tar.gz', 'wb') as f:
+                  f.write(r.read())
               "
               tar xz -C /app --strip-components=1 -f /tmp/serpapi-mcp.tar.gz
               echo "Installing uv..."
