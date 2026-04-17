@@ -1,0 +1,108 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# NAI Admin Resources — Firecrawl MCP Connector
+#
+# These resources live in the nai-admin namespace and configure the NAI/Envoy
+# Gateway to proxy Hermes → Firecrawl MCP via the NAI MCP Connector.
+#
+# Apply order:
+#   1. kubectl apply -f k8s/nai-admin-resources.yaml
+#   2. kubectl apply -f k8s/mcp-firecrawl.yaml          (mcp-firecrawl pod)
+#   3. In NAI console → Tools → MCP Connectors:
+#        Create connector named "hermes-mcp-firecrl"
+#        Backend URL: https://mcp-firecrawl.hermes-agent.svc.cluster.local/mcp
+#        This auto-generates an MCPRoute and a UUID-named Backend in nai-admin.
+#   4. Patch the MCPRoute to use the friendly-named 'firecrawl' Backend:
+#        kubectl patch mcproute hermes-mcp-firecrl -n nai-admin --type=json -p '[
+#          {"op": "replace", "path": "/spec/backendRefs/0/name", "value": "firecrawl"}
+#        ]'
+#      This renames the tool from "nai-<uuid>__search" → "firecrawl__search",
+#      which small models (4B) can recognise and invoke reliably.
+#
+# CA cert note:
+#   mcp-firecrawl-ca must contain the root CA that signed mcp-firecrawl's
+#   TLS certificate (root-ca.local, managed by cert-manager via nai-ca-issuer).
+#   To export it fresh from the cluster:
+#     kubectl get configmap root-ca-local -n nai-system \
+#       -o jsonpath='{.data.ca\.crt}' > /tmp/root-ca.crt
+#   Then replace the ca.crt value below with the contents of /tmp/root-ca.crt.
+# ══════════════════════════════════════════════════════════════════════════════
+
+---
+# ── 1. CA certificate ConfigMap ───────────────────────────────────────────────
+# Holds the root-ca.local CA cert so Envoy can verify mcp-firecrawl's TLS cert.
+# Without this, BackendTLSPolicy defaults to System trust store (which doesn't
+# include root-ca.local), causing Envoy to reject the TLS handshake with a 500.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-firecrawl-ca
+  namespace: nai-admin
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+data:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDGDCCAgCgAwIBAgIRAMYXuN5199PlAe6nsTvU2lwwDQYJKoZIhvcNAQELBQAw
+    GDEWMBQGA1UEAxMNcm9vdC1jYS5sb2NhbDAeFw0yNjA0MTMwMjI5NDBaFw0yNzA0
+    MTMwMjI5NDBaMAAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDus761
+    O0D7kk02TRkfoQ+ZmAmikLuwG5nf4a/5CrKRNAAolVHCA4l+X7kjed9AYWax1tBK
+    0K4mIPXBZrp4Do8DtHHx6gfq0X4IGiTAcnIB6773BApcJjlQDpGCsnWL/JHqQDtZ
+    SvLSchafB7hvIwsFkHpMqm/iM29Z2e3uRcBdRCWtXe4fhUFmVSWoQW8/bfHKnOJn
+    rIAkfgaPoudbx4aIAt7NkKpoYaC4ZDyDYXDxq80qV3v9IOsXbhTlkdinT0p4V0vI
+    B8VQ0x7ghaG6AvUehJQ996E2yxRiE+frN9wb9RYOKkbsJODqnOc10aruyEiQVqeL
+    r3qBpWL/Qaskee5BAgMBAAGjdTBzMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8E
+    AjAAMB8GA1UdIwQYMBaAFFm+tLpmd7k5zkEhdAUfgZm3nFW1MDIGA1UdEQEB/wQo
+    MCaCHioubmFpLXN5c3RlbS5zdmMuY2x1c3Rlci5sb2NhbIcEwKigyjANBgkqhkiG
+    9w0BAQsFAAOCAQEAhMKejL8la8CFKY2CnphyFpngc/nsV0KJrfbtNoUGVjTuf/DT
+    uzx/fcAARlv8UcCgKF8ZH8XjYGW7fN67rHu+Ex5fhv4Nlo4mkACMU75rhGNbDTBU
+    crsMwMfMQu9FCB61UhLjsmUIfBh+ExXksoZA7Vt1ztPA2S/uskT8Ve6PwftSXLok
+    7zqZcnaH/0sB3uSwMxEIHvRi4+5WO1O39yLJ7FFyPdJSkU/W7vHGv5Rk8R7Bm6VJ
+    iVeVZbo+Vxko1YvllJaCD+rAeskWwuL0mr9BqzeWj6B+R9dTXu7gWF5/yIW1qe5n
+    +/ZPbYkjEJqYJjwjw1wywBG7lEs1opLsWY5l4g==
+    -----END CERTIFICATE-----
+
+---
+# ── 2. Backend ────────────────────────────────────────────────────────────────
+# Friendly-named Backend so the NAI/Envoy tool name is "firecrawl__search"
+# instead of the auto-generated "nai-<uuid>__search".
+# Small models (4B params) need a human-readable tool name to invoke it reliably.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: firecrawl
+  namespace: nai-admin
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  type: Endpoints
+  endpoints:
+    - fqdn:
+        hostname: mcp-firecrawl.hermes-agent.svc.cluster.local
+        port: 443
+
+---
+# ── 3. BackendTLSPolicy ───────────────────────────────────────────────────────
+# Tells Envoy to verify mcp-firecrawl's TLS cert against root-ca.local.
+# Without this, Envoy uses System trust (no root-ca.local) and the connection
+# fails with a 500 before the request reaches mcp-firecrawl.
+apiVersion: gateway.networking.k8s.io/v1
+kind: BackendTLSPolicy
+metadata:
+  name: firecrawl
+  namespace: nai-admin
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  targetRefs:
+    - group: gateway.envoyproxy.io
+      kind: Backend
+      name: firecrawl
+  validation:
+    hostname: mcp-firecrawl.hermes-agent.svc.cluster.local
+    caCertificateRefs:
+      - name: mcp-firecrawl-ca
+        kind: ConfigMap
+        group: ''

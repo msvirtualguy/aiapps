@@ -1,0 +1,253 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Firecrawl MCP Server
+#
+# Exposes a FastMCP HTTP server (Streamable HTTP, port 8000) behind an nginx
+# TLS sidecar on port 443. The cert is signed by root-ca.local via cert-manager
+# so NAI's Go TLS client trusts it natively.
+#
+# NAI 2.6 MCP Connector configuration:
+#   URL:  https://mcp-firecrawl.hermes-agent.svc.cluster.local/mcp
+#   TLS:  trusted (root-ca.local)
+#   Auth: MCP connector key (managed by NAI)
+#
+# Prerequisites (one-time — skip if ca-key-pair already copied):
+#   kubectl get secret ca-key-pair -n nai-system -o json | \
+#     python3 -c "import json,sys; s=json.load(sys.stdin); \
+#       [s['metadata'].pop(k,None) for k in ['namespace','resourceVersion','uid',
+#        'creationTimestamp','managedFields']]; \
+#       s['metadata']['namespace']='hermes-agent'; print(json.dumps(s))" | \
+#     kubectl apply -f -
+#
+# Deploy:
+#   kubectl apply -f k8s/mcp-firecrawl.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+
+---
+# ── Certificate: signed by root-ca.local, trusted by NAI ─────────────────────
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mcp-firecrawl-tls
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  secretName: mcp-firecrawl-tls
+  issuerRef:
+    name: nai-ca-issuer
+    kind: Issuer
+  dnsNames:
+    - mcp-firecrawl
+    - mcp-firecrawl.hermes-agent
+    - mcp-firecrawl.hermes-agent.svc.cluster.local
+  duration: 8760h
+  renewBefore: 720h
+
+---
+# ── ConfigMap: nginx TLS-termination config ───────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-firecrawl-nginx
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+data:
+  default.conf: |
+    # POST → application/json  (Streamable HTTP request/response)
+    # GET  → text/event-stream (SSE channel for server notifications)
+    map $request_method $mcp_accept {
+        POST    "application/json, text/event-stream";
+        GET     "text/event-stream";
+        default "";
+    }
+
+    server {
+        listen      443 ssl;
+        server_name _;
+
+        ssl_certificate     /certs/cert.pem;
+        ssl_certificate_key /certs/key.pem;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+
+        location / {
+            proxy_pass         http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header   Connection   '';
+            proxy_set_header   Accept       $mcp_accept;
+            proxy_buffering    off;
+            proxy_cache        off;
+            proxy_read_timeout 3600s;
+        }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-firecrawl
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-firecrawl
+  template:
+    metadata:
+      labels:
+        app: mcp-firecrawl
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/component: mcp-firecrawl
+    spec:
+      initContainers:
+
+        # ── Install FastMCP + firecrawl-py and write server script ──────────
+        - name: setup
+          image: python:3.13-slim
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              pip install --quiet uv
+              uv venv /app/.venv
+              uv pip install --python /app/.venv --quiet fastmcp "firecrawl-py>=1.0.0"
+              cat <<'PYEOF' > /app/server.py
+              from fastmcp import FastMCP
+              import os, json
+              from firecrawl import FirecrawlApp
+
+              mcp = FastMCP("Firecrawl MCP")
+              fc = FirecrawlApp(api_key=os.environ["FIRECRAWL_API_KEY"])
+
+              def _dump(result) -> str:
+                  if hasattr(result, "model_dump"):
+                      return json.dumps(result.model_dump())
+                  return json.dumps(result)
+
+              @mcp.tool()
+              def scrape(url: str) -> str:
+                  """Scrape a URL and return its content as markdown."""
+                  return _dump(fc.scrape_url(url, formats=["markdown"]))
+
+              @mcp.tool()
+              def search(query: str, limit: int = 5) -> str:
+                  """Search the web and return results with scraped content."""
+                  return _dump(fc.search(query, limit=limit))
+
+              @mcp.tool()
+              def crawl(url: str, limit: int = 10) -> str:
+                  """Crawl a website starting from a URL and return all pages."""
+                  return _dump(fc.crawl_url(url, limit=limit))
+
+              if __name__ == "__main__":
+                  mcp.run(transport="streamable-http", host="0.0.0.0", port=8000)
+              PYEOF
+              echo "Setup complete"
+          volumeMounts:
+            - name: app
+              mountPath: /app
+
+      containers:
+
+        # ── 1. Firecrawl MCP server (HTTP, localhost:8000) ──────────────────
+        - name: mcp-firecrawl
+          image: python:3.13-slim
+          command:
+            - sh
+            - -c
+            - exec /app/.venv/bin/python /app/server.py
+          env:
+            - name: FIRECRAWL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hermes-secrets
+                  key: FIRECRAWL_API_KEY
+          volumeMounts:
+            - name: app
+              mountPath: /app
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+
+        # ── 2. nginx TLS termination (HTTPS:443 → HTTP:8000) ────────────────
+        - name: nginx-tls
+          image: nginx:alpine
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          volumeMounts:
+            - name: certs
+              mountPath: /certs
+              readOnly: true
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          readinessProbe:
+            tcpSocket:
+              port: 443
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+
+      volumes:
+        - name: app
+          emptyDir: {}
+        - name: certs
+          secret:
+            secretName: mcp-firecrawl-tls
+            items:
+              - key: tls.crt
+                path: cert.pem
+              - key: tls.key
+                path: key.pem
+        - name: nginx-config
+          configMap:
+            name: mcp-firecrawl-nginx
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-firecrawl
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp-firecrawl
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP

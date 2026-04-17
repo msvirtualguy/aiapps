@@ -84,14 +84,12 @@ data:
           - "@modelcontextprotocol/server-filesystem"
           - "/opt/data/workspace"
 
-      # SerpAPI web search — Hermes connects directly to the NAI MCP connector endpoint.
-      serpapi:
-        url: "https://192.168.160.202/enterpriseai/mcp/hermes-mcp-serpapi"
+      # Firecrawl web search/scrape — Hermes connects via the NAI MCP connector.
+      # NAI_MCP_KEY is the connector access key from the NAI console (Tools → MCP Connectors).
+      firecrawl:
+        url: "https://synthient.matrix.local/enterpriseai/mcp/hermes-mcp-firecrl"
         headers:
-          Authorization: "Bearer ${NAI_MCP_KEY}"
-
-      # fetch removed — web access now handled by SerpAPI above.
-      # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
+          Authorization: "Bearer REPLACE_NAI_MCP_KEY"
 
       # kubernetes MCP disabled — too many tool schemas (15+) overwhelm 4B models
       # kubernetes:

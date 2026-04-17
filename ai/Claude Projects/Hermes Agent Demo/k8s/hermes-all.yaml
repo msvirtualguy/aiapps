@@ -44,12 +44,12 @@ stringData:
   NAI_MODEL: "${NAI_MODEL}"
   TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
   TELEGRAM_ALLOWED_USERS: "${TELEGRAM_ALLOWED_USERS}"
-  SERPAPI_API_KEY: "${SERPAPI_API_KEY}"
+  FIRECRAWL_API_KEY: "${FIRECRAWL_API_KEY}"
   NAI_MCP_KEY: "${NAI_MCP_KEY}"
 
 ---
 # ── 3. ConfigMap (NAI self-signed CA certificate) ─────────────────────────────
-# Extracted from: openssl s_client -connect 192.168.160.202:443
+# Extracted from: openssl s_client -connect synthient.matrix.local:443
 # Mounted at /etc/ssl/nai/ca.crt and trusted via SSL_CERT_FILE env var.
 apiVersion: v1
 kind: ConfigMap
@@ -168,16 +168,11 @@ data:
           - "@modelcontextprotocol/server-filesystem"
           - "/opt/data/workspace"
 
-      # SerpAPI web search — Hermes connects directly to the NAI MCP connector endpoint.
-      # NAI handles routing to the mcp-serpapi pod; the MCP key authenticates access.
-      serpapi:
-        url: "https://192.168.160.202/enterpriseai/mcp/hermes-mcp-serpapi"
+      # Firecrawl web search/scrape — Hermes connects via the NAI MCP connector.
+      firecrawl:
+        url: "https://synthient.matrix.local/enterpriseai/mcp/hermes-mcp-firecrl"
         headers:
           Authorization: "Bearer ${NAI_MCP_KEY}"
-
-      # fetch removed — web access now handled by SerpAPI above.
-      # NAI connects to: http://mcp-serpapi.hermes-agent.svc.cluster.local:8000/<key>/mcp
-      # Configure the connector in the NAI console under Tools → MCP Servers.
 
       # kubernetes MCP server disabled — its 15+ tool schemas add ~4K tokens to
       # every request, which overwhelms small models (4B params) and causes timeouts.
@@ -223,10 +218,9 @@ spec:
     matchLabels:
       app: hermes
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    # Recreate (not RollingUpdate) prevents two Hermes pods running simultaneously.
+    # Two pods = two Telegram pollers = duplicate responses and race conditions.
+    type: Recreate
   template:
     metadata:
       labels:
@@ -254,12 +248,8 @@ spec:
             - -c
             - |
               set -e
-              if [ ! -f /opt/data/config.yaml ]; then
-                cp /config-src/config.yaml /opt/data/config.yaml
-                echo "Wrote config.yaml to /opt/data"
-              else
-                echo "config.yaml already exists, skipping"
-              fi
+              cp /config-src/config.yaml /opt/data/config.yaml
+              echo "Wrote config.yaml to /opt/data"
           volumeMounts:
             - name: hermes-data
               mountPath: /opt/data
