@@ -49,7 +49,7 @@ stringData:
 
 ---
 # ── 3. ConfigMap (NAI self-signed CA certificate) ─────────────────────────────
-# Extracted from: openssl s_client -connect synthient.matrix.local:443
+# Extracted from: openssl s_client -connect trinity.matrix.local:443
 # Mounted at /etc/ssl/nai/ca.crt and trusted via SSL_CERT_FILE env var.
 apiVersion: v1
 kind: ConfigMap
@@ -62,23 +62,24 @@ metadata:
 data:
   ca.crt: |
     -----BEGIN CERTIFICATE-----
-    MIIDGDCCAgCgAwIBAgIRAMYXuN5199PlAe6nsTvU2lwwDQYJKoZIhvcNAQELBQAw
-    GDEWMBQGA1UEAxMNcm9vdC1jYS5sb2NhbDAeFw0yNjA0MTMwMjI5NDBaFw0yNzA0
-    MTMwMjI5NDBaMAAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDus761
-    O0D7kk02TRkfoQ+ZmAmikLuwG5nf4a/5CrKRNAAolVHCA4l+X7kjed9AYWax1tBK
-    0K4mIPXBZrp4Do8DtHHx6gfq0X4IGiTAcnIB6773BApcJjlQDpGCsnWL/JHqQDtZ
-    SvLSchafB7hvIwsFkHpMqm/iM29Z2e3uRcBdRCWtXe4fhUFmVSWoQW8/bfHKnOJn
-    rIAkfgaPoudbx4aIAt7NkKpoYaC4ZDyDYXDxq80qV3v9IOsXbhTlkdinT0p4V0vI
-    B8VQ0x7ghaG6AvUehJQ996E2yxRiE+frN9wb9RYOKkbsJODqnOc10aruyEiQVqeL
-    r3qBpWL/Qaskee5BAgMBAAGjdTBzMA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8E
-    AjAAMB8GA1UdIwQYMBaAFFm+tLpmd7k5zkEhdAUfgZm3nFW1MDIGA1UdEQEB/wQo
-    MCaCHioubmFpLXN5c3RlbS5zdmMuY2x1c3Rlci5sb2NhbIcEwKigyjANBgkqhkiG
-    9w0BAQsFAAOCAQEAhMKejL8la8CFKY2CnphyFpngc/nsV0KJrfbtNoUGVjTuf/DT
-    uzx/fcAARlv8UcCgKF8ZH8XjYGW7fN67rHu+Ex5fhv4Nlo4mkACMU75rhGNbDTBU
-    crsMwMfMQu9FCB61UhLjsmUIfBh+ExXksoZA7Vt1ztPA2S/uskT8Ve6PwftSXLok
-    7zqZcnaH/0sB3uSwMxEIHvRi4+5WO1O39yLJ7FFyPdJSkU/W7vHGv5Rk8R7Bm6VJ
-    iVeVZbo+Vxko1YvllJaCD+rAeskWwuL0mr9BqzeWj6B+R9dTXu7gWF5/yIW1qe5n
-    +/ZPbYkjEJqYJjwjw1wywBG7lEs1opLsWY5l4g==
+    MIIDOTCCAiGgAwIBAgIUVKn1AFglXD093coWgE33SdHJVz8wDQYJKoZIhvcNAQEL
+    BQAwHzEdMBsGA1UEAwwUdHJpbml0eS5tYXRyaXgubG9jYWwwHhcNMjYwNTEyMDEw
+    NjIzWhcNMjcwNTEyMDEwNjIzWjAfMR0wGwYDVQQDDBR0cmluaXR5Lm1hdHJpeC5s
+    b2NhbDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK6b5mpQVaISvUgS
+    WCVg26mEZAvXWm/Bsaop9OufF4yIYOGoTutSa15DA+isqHTPj7QOxSNFYBDM0rUx
+    cqSNbSuH5QvoxFlOTfqCLSNmk+NFDqMsL+YgaAOppz0BRMR3EAy5izksbwsqVE/A
+    qEoQuSKxRPd4TcgUCFUxNI0aHLk66vtLPpW0zkH/A4lcJ7GDBA+ukzJMEF4/Qhlo
+    qDawPLv9bdYdSZYsq3k0o83ltixLxIo0icjk0qTZfycFIiNNRckHxtqCoClg1mBv
+    ZnJ7mpLLIvnXKB0/s+VANyi/N1YL5VRglg6AZD5rjTWlrt1X0rKGm5o8ccImol1Q
+    TbJTbfMCAwEAAaNtMGswJQYDVR0RBB4wHIIUdHJpbml0eS5tYXRyaXgubG9jYWyH
+    BMCooMowDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMB0GA1Ud
+    DgQWBBSDSIcAOxcM2ibI/BA/pn4SN6YzeTANBgkqhkiG9w0BAQsFAAOCAQEAZsXZ
+    7ENA//UEolSB0HPI6sntg9m7BrNvUfz6r11oKrLiiqP2uyMvaMNVUR3/osx5/OvQ
+    fhGB7gQyramYS1/iwPHfysOlcoi0rc1OE0SK/B/AzrYxCcmNh7sKmuw95LAehpZO
+    Kr1IzE0g4QxUYwgKlZqcw0TqoNrkLv4KrSyMuXDBBFsOS36g18M8/rPIS+yQLIfw
+    +J/jhi2fulenQ9M/MFWHxU0XzC0OMZXjv8JAdbZZT2uUcCHfP7ClGVQMtDZlLmhg
+    WuZU6h7l7iD0pkQNbiy52KwSc6nk3B8g/w/wQJ/GkOAyfVqtT8fANmBz1VdpiPcy
+    A5vEw1sCG/RvNcx7ew==
     -----END CERTIFICATE-----
 
 ---
@@ -170,7 +171,7 @@ data:
 
       # Firecrawl web search/scrape — Hermes connects via the NAI MCP connector.
       firecrawl:
-        url: "https://synthient.matrix.local/enterpriseai/mcp/hermes-mcp-firecrl"
+        url: "${NAI_MCP_CONNECTOR_URL}"
         headers:
           Authorization: "Bearer ${NAI_MCP_KEY}"
 

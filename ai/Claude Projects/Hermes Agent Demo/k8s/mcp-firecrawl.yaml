@@ -23,6 +23,28 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 ---
+# ── Issuer: cert-manager CA issuer using root-ca.local key pair ───────────────
+# Prerequisite: ca-key-pair secret must exist in hermes-agent namespace.
+# Copy it once with:
+#   kubectl get secret ca-key-pair -n nai-system -o json | \
+#     python3 -c "import json,sys; s=json.load(sys.stdin); \
+#       [s['metadata'].pop(k,None) for k in ['namespace','resourceVersion','uid',
+#        'creationTimestamp','managedFields']]; \
+#       s['metadata']['namespace']='hermes-agent'; print(json.dumps(s))" | \
+#     kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: nai-ca-issuer
+  namespace: hermes-agent
+  labels:
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/component: mcp-firecrawl
+spec:
+  ca:
+    secretName: ca-key-pair
+
+---
 # ── Certificate: signed by root-ca.local, trusted by NAI ─────────────────────
 apiVersion: cert-manager.io/v1
 kind: Certificate
