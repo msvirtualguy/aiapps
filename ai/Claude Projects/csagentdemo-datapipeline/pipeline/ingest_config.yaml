@@ -1,0 +1,51 @@
+# NV-Ingest pipeline configuration.
+# Paths and URLs are resolved from environment variables set in nim-registry ConfigMap.
+
+pipeline:
+  input_path: "/data/curated"
+  # File patterns → Milvus collection mapping
+  collections:
+    customer_records:
+      patterns: ["customer_data*", "customers*"]
+      chunk_size: 512
+      chunk_overlap: 64
+      metadata_fields:
+        - customer_id    # preserved as exact-match filter field
+        - order_id
+        - device_serial
+        - sku
+    return_policy:
+      patterns: ["return_policy*", "returns*", "policy*"]
+      chunk_size: 768
+      chunk_overlap: 128
+    rma_exceptions:
+      patterns: ["rma_exception*", "exceptions*", "rma_rules*"]
+      chunk_size: 512
+      chunk_overlap: 64
+
+embedding:
+  # Uses the embedding NIM deployed in cs-inference namespace
+  endpoint: "${EMBED_BASE_URL}"
+  model: "${EMBED_MODEL}"
+  batch_size: 32
+  dimension: 1024  # nv-embedqa-e5-v5 output dimension
+
+milvus:
+  host: "${MILVUS_HOST}"
+  port: ${MILVUS_PORT}
+  # Collections are created automatically if they don't exist
+
+extractors:
+  pdf:
+    enabled: true
+    extract_tables: true
+    extract_images: false
+  csv:
+    enabled: true
+  json:
+    enabled: true
+  markdown:
+    enabled: true
+  yaml:
+    enabled: true
+    treat_as: text

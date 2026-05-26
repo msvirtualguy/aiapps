@@ -1,0 +1,63 @@
+# KubeRay RayCluster for running NeMo Curator and NV-Ingest pipeline jobs.
+# Single-node demo: head node handles all compute, no worker nodes needed.
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: pipeline-cluster
+  namespace: cs-pipeline
+spec:
+  rayVersion: "2.9.0"
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-gpus: "0"
+    template:
+      spec:
+        imagePullSecrets:
+          - name: ngc-registry
+        containers:
+          - name: ray-head
+            image: rayproject/ray:nightly-py312-cu126-aarch64
+            ports:
+              - containerPort: 6379   # Ray GCS
+              - containerPort: 8265   # Ray Dashboard
+              - containerPort: 10001  # Ray client
+            resources:
+              limits:
+                cpu: "4"
+                memory: "8Gi"
+              requests:
+                cpu: "1"
+                memory: "4Gi"
+            volumeMounts:
+              - name: source-data
+                mountPath: /data
+            env:
+              - name: RAY_GRAFANA_HOST
+                value: "http://kube-prometheus-stack-grafana.monitoring.svc.cluster.local:80"
+        volumes:
+          - name: source-data
+            persistentVolumeClaim:
+              claimName: cs-source-data
+  workerGroupSpecs: []
+---
+# Headless service for Ray head node (required by Ray internals)
+apiVersion: v1
+kind: Service
+metadata:
+  name: raycluster-head-svc
+  namespace: cs-pipeline
+spec:
+  selector:
+    ray.io/node-type: head
+    ray.io/cluster: pipeline-cluster
+  ports:
+    - name: dashboard
+      port: 8265
+      targetPort: 8265
+    - name: gcs
+      port: 6379
+      targetPort: 6379
+    - name: client
+      port: 10001
+      targetPort: 10001

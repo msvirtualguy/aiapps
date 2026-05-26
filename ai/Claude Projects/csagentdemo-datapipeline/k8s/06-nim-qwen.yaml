@@ -1,0 +1,91 @@
+# Qwen3.6-35B-A3B NVFP4 NIM (MoE: 35B total / 3B active params)
+# Runs on DGX Spark GB10 Blackwell with NVFP4 — confirmed on DGX Spark / GB10 forum.
+# Enable thinking mode via: extra_body={"chat_template_kwargs": {"enable_thinking": true}}
+# Fallback if unavailable: nvcr.io/nim/qwen/qwen3-32b-dgx-spark:latest (ARM64-optimized)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qwen-nim-cache
+  namespace: cs-inference
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 25Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qwen-nim
+  namespace: cs-inference
+  labels:
+    app: qwen-nim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qwen-nim
+  template:
+    metadata:
+      labels:
+        app: qwen-nim
+    spec:
+      runtimeClassName: nvidia-cdi
+      imagePullSecrets:
+        - name: ngc-registry
+      containers:
+        - name: nim
+          image: nvcr.io/nim/qwen/qwen3.6-35b-a3b:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NGC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ngc-api-key
+                  key: NGC_API_KEY
+            - name: NIM_CACHE_PATH
+              value: /opt/nim/cache
+          resources:
+            limits:
+              cpu: "8"
+              memory: "20Gi"
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "4"
+              memory: "12Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: nim-cache
+              mountPath: /opt/nim/cache
+          readinessProbe:
+            httpGet:
+              path: /v1/health/ready
+              port: 8000
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /v1/health/live
+              port: 8000
+            initialDelaySeconds: 180
+            periodSeconds: 30
+      volumes:
+        - name: nim-cache
+          persistentVolumeClaim:
+            claimName: qwen-nim-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qwen-nim
+  namespace: cs-inference
+spec:
+  selector:
+    app: qwen-nim
+  ports:
+    - port: 8000
+      targetPort: 8000

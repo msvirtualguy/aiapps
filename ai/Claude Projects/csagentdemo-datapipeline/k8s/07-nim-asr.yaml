@@ -1,0 +1,90 @@
+# NVIDIA Nemotron ASR Streaming NIM (speech-to-text, 600M, streaming/real-time)
+# NGC image: nvcr.io/nim/nvidia/nemotron-asr-streaming:latest
+# API: POST /v1/asr with audio/wav or audio/flac → returns transcript JSON
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: asr-nim-cache
+  namespace: cs-inference
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asr-nim
+  namespace: cs-inference
+  labels:
+    app: asr-nim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asr-nim
+  template:
+    metadata:
+      labels:
+        app: asr-nim
+    spec:
+      runtimeClassName: nvidia-cdi
+      imagePullSecrets:
+        - name: ngc-registry
+      containers:
+        - name: nim
+          image: nvcr.io/nim/nvidia/nemotron-asr-streaming:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NGC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ngc-api-key
+                  key: NGC_API_KEY
+            - name: NIM_CACHE_PATH
+              value: /opt/nim/cache
+          resources:
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+              nvidia.com/gpu: "1"
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: nim-cache
+              mountPath: /opt/nim/cache
+          readinessProbe:
+            httpGet:
+              path: /v1/health/ready
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /v1/health/live
+              port: 8000
+            initialDelaySeconds: 90
+            periodSeconds: 30
+      volumes:
+        - name: nim-cache
+          persistentVolumeClaim:
+            claimName: asr-nim-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asr-nim
+  namespace: cs-inference
+spec:
+  selector:
+    app: asr-nim
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,10 @@
+config/.env
+*.pem
+*.key
+*.crt
+node_modules/
+.next/
+__pycache__/
+*.pyc
+.env.local
+tasks/lessons.md

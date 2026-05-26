@@ -1,0 +1,105 @@
+# Exposes NIM model endpoints, Ray Dashboard, and Grafana externally at spark.local.
+# Add to /etc/hosts on your workstation: <DGX_SPARK_IP>  spark.local
+#
+# NIM endpoints:
+#   https://spark.local/nim/qwen/v1/chat/completions
+#   https://spark.local/nim/embed/v1/embeddings
+#   https://spark.local/nim/asr/v1/asr
+#   https://spark.local/nim/tts/v1/audio/speech
+#   https://spark.local/ray        (Ray Dashboard)
+#   https://spark.local/grafana    (Grafana — auth: admin/admin)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: spark-tls
+  namespace: ingress-nginx
+spec:
+  secretName: spark-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  commonName: spark.local
+  dnsNames:
+    - spark.local
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: spark-nim-ingress
+  namespace: cs-inference
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - spark.local
+      secretName: spark-tls
+  rules:
+    - host: spark.local
+      http:
+        paths:
+          - path: /nim/qwen(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: qwen-nim
+                port:
+                  number: 8000
+          - path: /nim/embed(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: embedding-nim
+                port:
+                  number: 8000
+          - path: /nim/asr(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: asr-nim
+                port:
+                  number: 8000
+          - path: /nim/tts(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tts-nim
+                port:
+                  number: 8000
+---
+# Ray Dashboard ingress (namespace: cs-pipeline)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ray-dashboard-ingress
+  namespace: cs-pipeline
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - spark.local
+      secretName: spark-tls
+  rules:
+    - host: spark.local
+      http:
+        paths:
+          - path: /ray(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: raycluster-head-svc
+                port:
+                  number: 8265

@@ -1,0 +1,52 @@
+# CS Agent application ingress at csagent.local
+# Add to /etc/hosts on your workstation: <DGX_SPARK_IP>  csagent.local
+#
+#   https://csagent.local/        → Next.js frontend (chat + pipeline monitor)
+#   https://csagent.local/api/    → FastAPI agent backend
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: csagent-tls
+  namespace: cs-agent
+spec:
+  secretName: csagent-tls
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+  commonName: csagent.local
+  dnsNames:
+    - csagent.local
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: csagent-ingress
+  namespace: cs-agent
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - csagent.local
+      secretName: csagent-tls
+  rules:
+    - host: csagent.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: cs-agent-backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cs-agent-frontend
+                port:
+                  number: 3000

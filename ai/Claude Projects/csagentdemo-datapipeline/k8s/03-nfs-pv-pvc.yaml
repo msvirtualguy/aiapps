@@ -1,0 +1,75 @@
+# NFS PersistentVolumes pointing to the NAS share that holds:
+#   - customer_data.*         (raw, contains PII)
+#   - return_policy.*         (return/RMA policy document)
+#   - rma_exceptions.*        (RMA exception rules)
+#   - curated/                (written by NeMo Curator)
+#
+# NFS supports concurrent mounts, so we create two PVs pointing to the
+# same share — one bound per namespace (PV:PVC is 1:1 in Kubernetes).
+# Requires csi-driver-nfs installed (make foundation handles this).
+
+# PV for cs-pipeline namespace (pipeline jobs read/write)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cs-data-pipeline-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-csi
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: cs-data-pipeline
+    volumeAttributes:
+      server: "192.168.110.200"
+      share: "/volume1/k3s/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cs-source-data
+  namespace: cs-pipeline
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi
+  resources:
+    requests:
+      storage: 100Gi
+  volumeName: cs-data-pipeline-pv
+---
+# PV for cs-agent namespace (agent backend reads curation_report.json)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cs-data-agent-pv
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-csi
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: cs-data-agent
+    volumeAttributes:
+      server: "192.168.110.200"
+      share: "/volume1/k3s/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cs-source-data
+  namespace: cs-agent
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs-csi
+  resources:
+    requests:
+      storage: 100Gi
+  volumeName: cs-data-agent-pv

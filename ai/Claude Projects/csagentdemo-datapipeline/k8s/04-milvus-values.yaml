@@ -1,0 +1,37 @@
+# Helm values for Milvus standalone deployment in cs-pipeline namespace.
+# Install with:
+#   helm upgrade --install milvus milvus/milvus \
+#     --namespace cs-pipeline -f k8s/04-milvus-values.yaml --wait
+
+cluster:
+  enabled: false
+
+etcd:
+  replicaCount: 1
+  persistence:
+    storageClass: local-path
+    size: 10Gi
+
+minio:
+  mode: standalone
+  persistence:
+    storageClass: local-path
+    size: 20Gi
+
+standalone:
+  persistence:
+    enabled: true
+    storageClass: local-path
+    size: 20Gi
+
+service:
+  type: ClusterIP
+  port: 19530
+
+# Expose Prometheus metrics for Grafana scraping
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 30s

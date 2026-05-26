@@ -1,0 +1,81 @@
+# Kokoro TTS server (hexgrad/Kokoro-82M, MIT license)
+# Built locally on DGX Spark: make tts-build
+# API: POST /v1/audio/speech (OpenAI-compatible) → audio/wav
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tts-nim-cache
+  namespace: cs-inference
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tts-nim
+  namespace: cs-inference
+  labels:
+    app: tts-nim
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tts-nim
+  template:
+    metadata:
+      labels:
+        app: tts-nim
+    spec:
+      containers:
+        - name: tts
+          image: kokoro-tts:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: HF_HOME
+              value: /opt/nim/cache
+          resources:
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+            requests:
+              cpu: "2"
+              memory: "2Gi"
+          volumeMounts:
+            - name: nim-cache
+              mountPath: /opt/nim/cache
+          readinessProbe:
+            httpGet:
+              path: /v1/health/ready
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /v1/health/live
+              port: 8000
+            initialDelaySeconds: 90
+            periodSeconds: 30
+      volumes:
+        - name: nim-cache
+          persistentVolumeClaim:
+            claimName: tts-nim-cache
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tts-nim
+  namespace: cs-inference
+spec:
+  selector:
+    app: tts-nim
+  ports:
+    - port: 8000
+      targetPort: 8000

@@ -1,0 +1,49 @@
+# NeMo Curator PII curation job.
+# Creates a ConfigMap from pipeline/curator_job.py, then mounts it into the container.
+# Apply with: kubectl apply -f k8s/11-curator-job.yaml
+# (The Makefile pipeline target handles creating the ConfigMap first.)
+#
+# To create the ConfigMap manually before applying this job:
+#   kubectl create configmap curator-script \
+#     --from-file=curator_job.py=pipeline/curator_job.py \
+#     -n cs-pipeline --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nemo-curator-job
+  namespace: cs-pipeline
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: curator
+          image: python:3.11-slim
+          command: ["sh", "-c", "pip install pandas openpyxl python-docx -q && python /scripts/curator_job.py"]
+          resources:
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+          volumeMounts:
+            - name: source-data
+              mountPath: /data
+            - name: curator-script
+              mountPath: /scripts
+          env:
+            - name: INPUT_PATH
+              value: /data
+            - name: OUTPUT_PATH
+              value: /data/curated
+            - name: REPORT_PATH
+              value: /data/curated/curation_report.json
+      volumes:
+        - name: source-data
+          persistentVolumeClaim:
+            claimName: cs-source-data
+        - name: curator-script
+          configMap:
+            name: curator-script

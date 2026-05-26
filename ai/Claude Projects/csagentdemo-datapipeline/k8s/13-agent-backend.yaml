@@ -1,0 +1,67 @@
+# CS Agent FastAPI backend deployment.
+# Connects to Qwen NIM (LLM), Milvus (RAG), ASR NIM, Personaplex NIM.
+# Exposes: /api/chat (SSE), /api/asr, /api/tts, /api/health, /api/pipeline/status
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cs-agent-backend
+  namespace: cs-agent
+  labels:
+    app: cs-agent-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cs-agent-backend
+  template:
+    metadata:
+      labels:
+        app: cs-agent-backend
+    spec:
+      containers:
+        - name: agent
+          image: cs-agent-backend:latest
+          imagePullPolicy: Never  # built locally on DGX Spark
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: nim-registry
+          volumeMounts:
+            - name: nfs-data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "2"
+              memory: "2Gi"
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+      volumes:
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: cs-source-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-agent-backend
+  namespace: cs-agent
+spec:
+  selector:
+    app: cs-agent-backend
+  ports:
+    - port: 8000
+      targetPort: 8000

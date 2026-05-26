@@ -1,0 +1,53 @@
+# Next.js frontend deployment.
+# Serves the CS Agent chat UI + Pipeline Monitor tab.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cs-agent-frontend
+  namespace: cs-agent
+  labels:
+    app: cs-agent-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cs-agent-frontend
+  template:
+    metadata:
+      labels:
+        app: cs-agent-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: cs-agent-frontend:latest
+          imagePullPolicy: Never  # built locally on DGX Spark
+          ports:
+            - containerPort: 3000
+          env:
+            - name: AGENT_BACKEND_URL
+              value: "http://cs-agent-backend.cs-agent.svc.cluster.local:8000"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-agent-frontend
+  namespace: cs-agent
+spec:
+  selector:
+    app: cs-agent-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000

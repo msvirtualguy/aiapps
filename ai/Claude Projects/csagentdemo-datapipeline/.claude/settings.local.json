@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"c:\\\\homelab\\\\ai\\\\Claude Projects\\\\csagentdemo-datapipeline\" ls-tree -r master)"
+    ]
+  }
+}

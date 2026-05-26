@@ -1,0 +1,56 @@
+# NV-Ingest vectorization job.
+# Runs after NeMo Curator completes. Reads from /data/curated/.
+# Creates ConfigMaps from pipeline scripts before applying.
+#
+# The Makefile pipeline target handles ConfigMap creation automatically.
+# To create manually:
+#   kubectl create configmap ingest-script \
+#     --from-file=run_ingest.py=pipeline/run_ingest.py \
+#     -n cs-pipeline --dry-run=client -o yaml | kubectl apply -f -
+#   kubectl create configmap ingest-config \
+#     --from-file=ingest_config.yaml=pipeline/ingest_config.yaml \
+#     -n cs-pipeline --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nv-ingest-job
+  namespace: cs-pipeline
+spec:
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: nv-ingest
+          image: python:3.11-slim
+          command: ["sh", "-c", "pip install pymilvus httpx pandas openpyxl python-docx pypdf -q && python /scripts/run_ingest.py"]
+          resources:
+            limits:
+              cpu: "4"
+              memory: "4Gi"
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+          volumeMounts:
+            - name: source-data
+              mountPath: /data
+            - name: ingest-script
+              mountPath: /scripts
+            - name: ingest-config
+              mountPath: /config
+          env:
+            - name: RESET_COLLECTIONS
+              value: "true"
+          envFrom:
+            - configMapRef:
+                name: nim-registry
+      volumes:
+        - name: source-data
+          persistentVolumeClaim:
+            claimName: cs-source-data
+        - name: ingest-script
+          configMap:
+            name: ingest-script
+        - name: ingest-config
+          configMap:
+            name: ingest-config
